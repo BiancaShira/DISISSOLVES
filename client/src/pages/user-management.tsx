@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { Sidebar } from "@/components/sidebar";
+import { RaiseIssueModal } from "@/components/raise-issue-modal";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -16,6 +17,11 @@ export default function UserManagement() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [editingUser, setEditingUser] = useState<string | null>(null);
+  const [showRaiseIssueModal, setShowRaiseIssueModal] = useState(false);
+
+  const handleRaiseIssue = () => {
+    setShowRaiseIssueModal(true);
+  };
 
   const { data: users = [], isLoading } = useQuery<User[]>({
     queryKey: ["/api/users"],
@@ -102,7 +108,7 @@ export default function UserManagement() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Sidebar />
+      <Sidebar onRaiseIssue={handleRaiseIssue} />
       
       <main className="ml-64 min-h-screen">
         <header className="bg-card border-b border-border p-6">
@@ -221,6 +227,11 @@ export default function UserManagement() {
           )}
         </div>
       </main>
+
+      <RaiseIssueModal 
+        isOpen={showRaiseIssueModal} 
+        onClose={() => setShowRaiseIssueModal(false)} 
+      />
     </div>
   );
 }

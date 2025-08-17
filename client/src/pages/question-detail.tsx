@@ -5,6 +5,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { Sidebar } from "@/components/sidebar";
+import { RaiseIssueModal } from "@/components/raise-issue-modal";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -19,6 +20,11 @@ export default function QuestionDetail() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [answerText, setAnswerText] = useState("");
+  const [showRaiseIssueModal, setShowRaiseIssueModal] = useState(false);
+
+  const handleRaiseIssue = () => {
+    setShowRaiseIssueModal(true);
+  };
 
   if (!match || !params?.id) {
     return <div>Question not found</div>;
@@ -152,7 +158,7 @@ export default function QuestionDetail() {
   if (questionLoading) {
     return (
       <div className="min-h-screen bg-background">
-        <Sidebar />
+        <Sidebar onRaiseIssue={handleRaiseIssue} />
         <main className="ml-64 min-h-screen p-6">
           <div className="text-center py-8">
             <p className="text-muted-foreground">Loading question...</p>
@@ -165,7 +171,7 @@ export default function QuestionDetail() {
   if (!question) {
     return (
       <div className="min-h-screen bg-background">
-        <Sidebar />
+        <Sidebar onRaiseIssue={handleRaiseIssue} />
         <main className="ml-64 min-h-screen p-6">
           <div className="text-center py-8">
             <p className="text-muted-foreground">Question not found.</p>
@@ -183,7 +189,7 @@ export default function QuestionDetail() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Sidebar />
+      <Sidebar onRaiseIssue={handleRaiseIssue} />
       
       <main className="ml-64 min-h-screen">
         {/* Header */}
@@ -369,6 +375,11 @@ export default function QuestionDetail() {
           )}
         </div>
       </main>
+
+      <RaiseIssueModal 
+        isOpen={showRaiseIssueModal} 
+        onClose={() => setShowRaiseIssueModal(false)} 
+      />
     </div>
   );
 }

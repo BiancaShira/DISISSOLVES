@@ -1,6 +1,8 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { Sidebar } from "@/components/sidebar";
+import { RaiseIssueModal } from "@/components/raise-issue-modal";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart3, TrendingUp, Users, CheckCircle, Clock, Eye } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
@@ -9,6 +11,11 @@ const COLORS = ['#052E16', '#84CC16', '#22c55e', '#16a34a', '#15803d'];
 
 export default function Analytics() {
   const { user } = useAuth();
+  const [showRaiseIssueModal, setShowRaiseIssueModal] = useState(false);
+
+  const handleRaiseIssue = () => {
+    setShowRaiseIssueModal(true);
+  };
 
   const { data: analytics, isLoading } = useQuery({
     queryKey: ["/api/analytics"],
@@ -43,7 +50,7 @@ export default function Analytics() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Sidebar />
+      <Sidebar onRaiseIssue={handleRaiseIssue} />
       
       <main className="ml-64 min-h-screen">
         <header className="bg-card border-b border-border p-6">
@@ -198,6 +205,11 @@ export default function Analytics() {
           )}
         </div>
       </main>
+      
+      <RaiseIssueModal 
+        isOpen={showRaiseIssueModal} 
+        onClose={() => setShowRaiseIssueModal(false)} 
+      />
     </div>
   );
 }

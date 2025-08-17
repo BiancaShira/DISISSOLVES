@@ -1,48 +1,48 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, timestamp, integer, boolean, pgEnum } from "drizzle-orm/pg-core";
+import { mysqlTable, text, varchar, timestamp, int, mysqlEnum } from "drizzle-orm/mysql-core";
 import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-export const userRoleEnum = pgEnum("user_role", ["admin", "user", "supervisor"]);
-export const categoryEnum = pgEnum("category", ["ibml", "softtrac", "omniscan"]);
-export const statusEnum = pgEnum("status", ["pending", "approved", "rejected"]);
-export const priorityEnum = pgEnum("priority", ["low", "medium", "high", "urgent"]);
+export const userRoleEnum = mysqlEnum("user_role", ["admin", "user", "supervisor"]);
+export const categoryEnum = mysqlEnum("category", ["ibml", "softtrac", "omniscan"]);
+export const statusEnum = mysqlEnum("status", ["pending", "approved", "rejected"]);
+export const priorityEnum = mysqlEnum("priority", ["low", "medium", "high", "urgent"]);
 
-export const users = pgTable("users", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  username: text("username").notNull().unique(),
+export const users = mysqlTable("users", {
+  id: varchar("id", { length: 36 }).primaryKey().default(sql`(UUID())`),
+  username: varchar("username", { length: 255 }).notNull().unique(),
   password: text("password").notNull(),
-  role: userRoleEnum("role").notNull().default("user"),
-  firstName: text("first_name"),
-  lastName: text("last_name"),
+  role: userRoleEnum.notNull().default("user"),
+  firstName: varchar("first_name", { length: 255 }),
+  lastName: varchar("last_name", { length: 255 }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-export const questions = pgTable("questions", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+export const questions = mysqlTable("questions", {
+  id: varchar("id", { length: 36 }).primaryKey().default(sql`(UUID())`),
   title: text("title").notNull(),
   description: text("description").notNull(),
-  category: categoryEnum("category").notNull(),
-  priority: priorityEnum("priority").notNull().default("medium"),
-  createdBy: varchar("created_by").notNull(),
+  category: categoryEnum.notNull(),
+  priority: priorityEnum.notNull().default("medium"),
+  createdBy: varchar("created_by", { length: 36 }).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-  status: statusEnum("status").notNull().default("pending"),
-  views: integer("views").default(0).notNull(),
+  status: statusEnum.notNull().default("pending"),
+  views: int("views").default(0).notNull(),
 });
 
-export const answers = pgTable("answers", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  questionId: varchar("question_id").notNull(),
+export const answers = mysqlTable("answers", {
+  id: varchar("id", { length: 36 }).primaryKey().default(sql`(UUID())`),
+  questionId: varchar("question_id", { length: 36 }).notNull(),
   answerText: text("answer_text").notNull(),
-  createdBy: varchar("created_by").notNull(),
+  createdBy: varchar("created_by", { length: 36 }).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-  status: statusEnum("status").notNull().default("pending"),
+  status: statusEnum.notNull().default("pending"),
 });
 
-export const activityLog = pgTable("activity_log", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  userId: varchar("user_id").notNull(),
+export const activityLog = mysqlTable("activity_log", {
+  id: varchar("id", { length: 36 }).primaryKey().default(sql`(UUID())`),
+  userId: varchar("user_id", { length: 36 }).notNull(),
   action: text("action").notNull(),
   timestamp: timestamp("timestamp").defaultNow().notNull(),
 });

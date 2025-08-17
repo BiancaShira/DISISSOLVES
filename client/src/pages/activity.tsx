@@ -1,6 +1,8 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { Sidebar } from "@/components/sidebar";
+import { RaiseIssueModal } from "@/components/raise-issue-modal";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { History, MessageSquare, HelpCircle, Calendar } from "lucide-react";
@@ -8,6 +10,11 @@ import { Link } from "wouter";
 
 export default function Activity() {
   const { user } = useAuth();
+  const [showRaiseIssueModal, setShowRaiseIssueModal] = useState(false);
+
+  const handleRaiseIssue = () => {
+    setShowRaiseIssueModal(true);
+  };
 
   const { data: activity = [], isLoading } = useQuery({
     queryKey: ["/api/activity", user?.id],
@@ -35,7 +42,7 @@ export default function Activity() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Sidebar />
+      <Sidebar onRaiseIssue={handleRaiseIssue} />
       
       <main className="ml-64 min-h-screen">
         <header className="bg-card border-b border-border p-6">
@@ -127,6 +134,11 @@ export default function Activity() {
           )}
         </div>
       </main>
+
+      <RaiseIssueModal 
+        isOpen={showRaiseIssueModal} 
+        onClose={() => setShowRaiseIssueModal(false)} 
+      />
     </div>
   );
 }
