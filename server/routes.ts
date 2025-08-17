@@ -115,10 +115,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/questions/:id/answers", requireAuth, async (req, res) => {
     try {
-      const validatedData = insertAnswerSchema.parse(req.body);
+      const { answerText } = req.body;
       
+      if (!answerText || typeof answerText !== 'string' || answerText.trim().length === 0) {
+        return res.status(400).json({ message: "Answer text is required" });
+      }
+
       // Determine answer status based on user role
-      let status = "pending";
+      let status: "pending" | "approved" | "rejected" = "pending";
       if (req.user!.role === "admin") {
         status = "approved";
       } else if (req.user!.role === "supervisor") {
@@ -128,7 +132,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const answer = await storage.createAnswer({
-        ...validatedData,
+        answerText: answerText.trim(),
         questionId: req.params.id,
         createdBy: req.user!.id,
         status,
@@ -142,7 +146,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       res.status(201).json(answer);
     } catch (error) {
-      res.status(400).json({ message: "Invalid answer data" });
+      console.error("Answer creation error:", error);
+      res.status(400).json({ message: "Failed to create answer", error: error instanceof Error ? error.message : "Unknown error" });
     }
   });
 

@@ -123,7 +123,7 @@ export default function QuestionDetail() {
     }
   };
 
-  const getTimeAgo = (date: string) => {
+  const getTimeAgo = (date: string | Date) => {
     const now = new Date();
     const created = new Date(date);
     const diffInHours = Math.floor((now.getTime() - created.getTime()) / (1000 * 60 * 60));
@@ -334,8 +334,8 @@ export default function QuestionDetail() {
             </CardContent>
           </Card>
 
-          {/* Answer Form - Only for supervisors and admins */}
-          {(user?.role === "supervisor" || user?.role === "admin") && (
+          {/* Answer Form - Available to all authenticated users */}
+          {user && (
             <Card>
               <CardHeader>
                 <CardTitle>Submit an Answer</CardTitle>
