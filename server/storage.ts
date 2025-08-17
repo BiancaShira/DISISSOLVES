@@ -1,11 +1,12 @@
 import { users, questions, answers, activityLog, type User, type InsertUser, type Question, type InsertQuestion, type Answer, type InsertAnswer, type QuestionWithAuthor, type AnswerWithAuthor } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, asc, count, and, or, like, sql } from "drizzle-orm";
-import session from "express-session";
-import MySQLStore from "express-mysql-session";
+import session, { Store } from "express-session";
+import MySQLStoreFactory from "express-mysql-session";
 import mysql from "mysql2/promise";
 
-const MySQLSessionStore = MySQLStore(session);
+// Create MySQL session store
+const MySQLStore = MySQLStoreFactory(session);
 
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
@@ -78,7 +79,7 @@ export class DatabaseStorage implements IStorage {
       }
     };
     
-    this.sessionStore = new MySQLSessionStore(sessionStoreOptions);
+    this.sessionStore = new MySQLStore(sessionStoreOptions);
   }
 
   async getUser(id: string): Promise<User | undefined> {
