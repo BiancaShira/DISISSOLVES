@@ -1,11 +1,11 @@
 import { users, questions, answers, activityLog, type User, type InsertUser, type Question, type InsertQuestion, type Answer, type InsertAnswer, type QuestionWithAuthor, type AnswerWithAuthor } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, asc, count, and, or, ilike, sql } from "drizzle-orm";
+import { eq, desc, asc, count, and, or, like, sql } from "drizzle-orm";
 import session from "express-session";
-import connectPg from "connect-pg-simple";
-import { pool } from "./db";
+import MySQLStore from "express-mysql-session";
+import mysql from "mysql2/promise";
 
-const PostgresSessionStore = connectPg(session);
+const MySQLSessionStore = MySQLStore(session);
 
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
@@ -61,10 +61,24 @@ export class DatabaseStorage implements IStorage {
   sessionStore: any;
 
   constructor() {
-    this.sessionStore = new PostgresSessionStore({ 
-      pool, 
-      createTableIfMissing: true 
-    });
+    const sessionStoreOptions = {
+      host: process.env.DB_HOST || 'localhost',
+      port: parseInt(process.env.DB_PORT || '3306'),
+      user: process.env.DB_USER || 'root',
+      password: process.env.DB_PASSWORD || '',
+      database: process.env.DB_NAME || 'disisolves',
+      createDatabaseTable: true,
+      schema: {
+        tableName: 'sessions',
+        columnNames: {
+          session_id: 'session_id',
+          expires: 'expires',
+          data: 'data'
+        }
+      }
+    };
+    
+    this.sessionStore = new MySQLSessionStore(sessionStoreOptions);
   }
 
   async getUser(id: string): Promise<User | undefined> {
@@ -78,11 +92,17 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const [user] = await db
+    await db
       .insert(users)
-      .values(insertUser)
-      .returning();
-    return user;
+      .values(insertUser);
+    
+    // Get the created user by username since MySQL doesn't have RETURNING
+    const [createdUser] = await db
+      .select()
+      .from(users)
+      .where(eq(users.username, insertUser.username));
+    
+    return createdUser;
   }
 
   async getQuestions(filters: {
@@ -128,33 +148,33 @@ export class DatabaseStorage implements IStorage {
     if (search) {
       conditions.push(
         or(
-          ilike(questions.title, `%${search}%`),
-          ilike(questions.description, `%${search}%`)
+          like(questions.title, `%${search}%`),
+          like(questions.description, `%${search}%`)
         )
       );
     }
 
     let query = baseQuery;
     if (conditions.length > 0) {
-      query = query.where(and(...conditions));
+      query = query.where(and(...conditions)) as typeof baseQuery;
     }
 
     // Apply sorting
     switch (sortBy) {
       case "views":
-        query = query.orderBy(desc(questions.views));
+        query = query.orderBy(desc(questions.views)) as typeof baseQuery;
         break;
       case "answers":
-        query = query.orderBy(desc(count(answers.id)));
+        query = query.orderBy(desc(count(answers.id))) as typeof baseQuery;
         break;
       case "trending":
         // Simple trending: recent questions with high views and answers
         query = query.orderBy(
-          desc(sql`(${questions.views} + ${count(answers.id)} * 2) / (EXTRACT(EPOCH FROM (NOW() - ${questions.createdAt})) / 3600 + 1)`)
-        );
+          desc(sql`(${questions.views} + COUNT(${answers.id}) * 2) / (TIMESTAMPDIFF(HOUR, ${questions.createdAt}, NOW()) + 1)`)
+        ) as typeof baseQuery;
         break;
       default:
-        query = query.orderBy(desc(questions.createdAt));
+        query = query.orderBy(desc(questions.createdAt)) as typeof baseQuery;
     }
 
     const result = await query.limit(limit).offset(offset);
@@ -200,11 +220,19 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createQuestion(question: InsertQuestion & { createdBy: string }): Promise<Question> {
-    const [newQuestion] = await db
+    await db
       .insert(questions)
-      .values(question)
-      .returning();
-    return newQuestion;
+      .values(question);
+    
+    // Get the created question by title and createdBy since MySQL doesn't have RETURNING
+    const [createdQuestion] = await db
+      .select()
+      .from(questions)
+      .where(and(eq(questions.title, question.title), eq(questions.createdBy, question.createdBy)))
+      .orderBy(desc(questions.createdAt))
+      .limit(1);
+    
+    return createdQuestion;
   }
 
   async updateQuestionStatus(id: string, status: "pending" | "approved" | "rejected"): Promise<void> {
@@ -246,11 +274,19 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createAnswer(answer: InsertAnswer & { createdBy: string }): Promise<Answer> {
-    const [newAnswer] = await db
+    await db
       .insert(answers)
-      .values(answer)
-      .returning();
-    return newAnswer;
+      .values(answer);
+    
+    // Get the created answer by questionId and createdBy since MySQL doesn't have RETURNING
+    const [createdAnswer] = await db
+      .select()
+      .from(answers)
+      .where(and(eq(answers.questionId, answer.questionId), eq(answers.createdBy, answer.createdBy)))
+      .orderBy(desc(answers.createdAt))
+      .limit(1);
+    
+    return createdAnswer;
   }
 
   async updateAnswerStatus(id: string, status: "pending" | "approved" | "rejected"): Promise<void> {

@@ -20,11 +20,11 @@ Preferred communication style: Simple, everyday language.
 - **Runtime**: Node.js with Express.js framework
 - **Language**: TypeScript with ES modules for modern JavaScript features
 - **Authentication**: Passport.js with local strategy and session-based auth
-- **Session Management**: Express sessions with PostgreSQL session store
+- **Session Management**: Express sessions with MySQL session store
 - **API Design**: RESTful endpoints with role-based middleware protection
 
 ## Database Architecture
-- **Database**: PostgreSQL with Neon serverless hosting
+- **Database**: MySQL for XAMPP compatibility on local development
 - **ORM**: Drizzle ORM for type-safe database operations
 - **Schema**: Structured with enums for categories (IBML, SoftTrac, OmniScan), user roles (admin, user, supervisor), and status tracking
 - **Key Tables**: Users, Questions, Answers, Activity Log with proper foreign key relationships
@@ -47,8 +47,8 @@ Preferred communication style: Simple, everyday language.
 # External Dependencies
 
 ## Database Services
-- **Neon Database**: Serverless PostgreSQL hosting with connection pooling
-- **@neondatabase/serverless**: Neon-specific PostgreSQL driver with WebSocket support
+- **MySQL**: MySQL database server for local XAMPP development
+- **mysql2**: MySQL database driver with Promise support for Node.js
 
 ## UI & Component Libraries
 - **Radix UI**: Comprehensive headless component primitives for accessibility
@@ -63,10 +63,10 @@ Preferred communication style: Simple, everyday language.
 
 ## Authentication & Session Management
 - **Passport.js**: Authentication middleware with local strategy
-- **connect-pg-simple**: PostgreSQL session store for persistent sessions
+- **express-mysql-session**: MySQL session store for persistent sessions
 - **Express Session**: Server-side session management with security configurations
 
 ## Data Management
-- **Drizzle ORM**: Type-safe database queries with PostgreSQL dialect
+- **Drizzle ORM**: Type-safe database queries with MySQL dialect
 - **Drizzle Kit**: Migration management and schema introspection tools
 - **TanStack Query**: Client-side data fetching, caching, and synchronization
