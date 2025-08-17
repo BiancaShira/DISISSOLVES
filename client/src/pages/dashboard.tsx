@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Sidebar } from "@/components/sidebar";
-import { QuestionCard } from "@/components/question-card";
-import { RaiseIssueModal } from "@/components/raise-issue-modal";
+import { QuestionCard } from "../components/question-card";
+import { RaiseIssueModal } from "../components/raise-issue-modal";
 import { useAuth } from "@/hooks/use-auth";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -18,6 +18,18 @@ export default function Dashboard() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [sortBy, setSortBy] = useState("recent");
   const [showRaiseIssueModal, setShowRaiseIssueModal] = useState(false);
+
+  // Handle sidebar filter changes
+  const handleFilterChange = (filters: { sortBy?: string; category?: string; status?: string }) => {
+    if (filters.sortBy) setSortBy(filters.sortBy);
+    if (filters.category) setCategoryFilter(filters.category);
+    if (filters.status) setStatusFilter(filters.status);
+  };
+
+  // Handle raise issue from sidebar
+  const handleRaiseIssue = () => {
+    setShowRaiseIssueModal(true);
+  };
 
   // Fetch questions
   const { data: questions = [], isLoading: questionsLoading } = useQuery<QuestionWithAuthor[]>({
@@ -48,7 +60,7 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Sidebar />
+      <Sidebar onFilterChange={handleFilterChange} onRaiseIssue={handleRaiseIssue} />
       
       {/* Main Content */}
       <main className="ml-64 min-h-screen">
@@ -60,7 +72,10 @@ export default function Dashboard() {
               <div className="flex items-center space-x-2">
                 <span className="text-sm text-muted-foreground">Welcome back,</span>
                 <span className="text-sm font-medium text-primary">
-                  {user?.firstName || user?.username}
+                  {user?.firstName && user?.lastName 
+                    ? `${user.firstName} ${user.lastName}` 
+                    : user?.username
+                  }
                 </span>
               </div>
             </div>

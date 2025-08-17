@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -16,6 +17,7 @@ export function QuestionCard({ question }: QuestionCardProps) {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [, setLocation] = useLocation();
 
   const getCategoryColor = (category: string) => {
     switch (category) {
@@ -99,8 +101,12 @@ export function QuestionCard({ question }: QuestionCardProps) {
     },
   });
 
+  const handleCardClick = () => {
+    setLocation(`/question/${question.id}`);
+  };
+
   return (
-    <Card className="hover:shadow-md transition-shadow cursor-pointer">
+    <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={handleCardClick}>
       <CardContent className="p-6">
         <div className="flex items-start justify-between">
           <div className="flex-1">
@@ -157,7 +163,10 @@ export function QuestionCard({ question }: QuestionCardProps) {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => approveQuestionMutation.mutate()}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        approveQuestionMutation.mutate();
+                      }}
                       disabled={approveQuestionMutation.isPending}
                       className="text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20"
                     >
@@ -166,7 +175,10 @@ export function QuestionCard({ question }: QuestionCardProps) {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => rejectQuestionMutation.mutate()}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        rejectQuestionMutation.mutate();
+                      }}
                       disabled={rejectQuestionMutation.isPending}
                       className="text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
                     >
