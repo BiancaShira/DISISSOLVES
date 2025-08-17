@@ -1,0 +1,162 @@
+Build a web-based internal troubleshooting system called DisiSolves.
+The system should function like StackOverflow, but as a private internal platform for the company.
+It will allow employees to raise, view, and solve daily workplace IT/software issues, specifically around IBML Scanners, SoftTrac, and OmniScan.
+
+🔑 User Roles & Permissions
+1. Admin
+
+Full control of the system.
+
+Can approve/reject questions and answers posted by supervisors.
+
+Can view all questions, answers, trending issues, and recent activity.
+
+Can manage users (users are added directly into the database; no signup required).
+
+Can view analytics (most frequent issues, trending topics, active supervisors).
+
+2. User
+
+Can log in and view:
+
+Trending questions
+
+Most recent issues
+
+All available questions
+
+Can raise an issue (submit a question via a “Raise an Issue” form).
+
+Cannot post answers.
+
+3. Supervisor
+
+Same viewing permissions as a user (trending, recent, all questions).
+
+Can post questions.
+
+Can post answers, but answers must be approved by Admin before becoming visible.
+
+Can view recent issues.
+
+🛠️ Functional Requirements
+
+Index page should be a Login Page (username + password).
+
+Users are preloaded into the database (no registration system, login only).
+
+Role-based dashboards after login:
+
+User Dashboard → Trending, Recent, All Questions, Raise Issue form.
+
+Supervisor Dashboard → Same as User + ability to post answers/questions (pending admin approval).
+
+Admin Dashboard → Full system access, including approvals, analytics, and user management.
+
+Search/Filter: Users should be able to filter questions/issues by software (IBML, SoftTrac, OmniScan).
+
+Efficiency: System should be lightweight, responsive, and fast.
+
+Security: Passwords should be stored securely using hashing.
+
+🗄️ Database Schema (General Structure)
+
+users
+
+id (unique ID)
+
+username
+
+password (hashed)
+
+role (admin, user, supervisor)
+
+questions
+
+id (unique ID)
+
+title
+
+description
+
+category (IBML, SoftTrac, OmniScan)
+
+created_by (linked to users)
+
+created_at (timestamp)
+
+status (pending, approved)
+
+answers
+
+id (unique ID)
+
+question_id (linked to questions)
+
+answer_text
+
+created_by (linked to users)
+
+created_at (timestamp)
+
+status (pending, approved)
+
+activity_log
+
+id (unique ID)
+
+user_id (linked to users)
+
+action
+
+timestamp
+
+🎨 UI/UX Requirements
+
+Primary Colors:
+
+Dark Green → #052E16
+
+Lime Green → #84CC16
+
+Theme: Support both Light Mode and Dark Mode.
+
+Clean, minimal layout with:
+
+Sidebar or top navigation bar (Trending | Recent | Raise Issue | My Activity).
+
+Search bar for filtering.
+
+Easy readability for questions and answers.
+
+🚀 Additional Notes
+
+Supervisor-submitted answers/questions must be approved by the Admin before they go live.
+
+Admin dashboard should include:
+
+Pending approvals
+
+User management
+
+System statistics (most active users, common issues, trends).
+
+Trending Questions should be determined by:
+
+Number of views
+
+Number of answers
+
+Recent activity
+
+📌 Deliverables
+
+A role-based login system with three types of accounts (Admin, User, Supervisor).
+
+A dashboard experience tailored to each role.
+
+Database integration for managing users, questions, answers, and logs.
+
+A responsive design that supports both light and dark themes.
+
+An efficient internal Q&A platform that mimics StackOverflow’s core functionality but is optimized for internal company use.
