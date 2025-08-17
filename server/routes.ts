@@ -113,15 +113,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/questions/:id/answers", requireAuth, requireRole(["admin", "supervisor"]), async (req, res) => {
+  app.post("/api/questions/:id/answers", requireAuth, async (req, res) => {
     try {
       const validatedData = insertAnswerSchema.parse(req.body);
       
+      // Determine answer status based on user role
+      let status = "pending";
+      if (req.user!.role === "admin") {
+        status = "approved";
+      } else if (req.user!.role === "supervisor") {
+        status = "pending"; // Supervisors need approval
+      } else {
+        status = "pending"; // Regular users need approval
+      }
+
       const answer = await storage.createAnswer({
         ...validatedData,
         questionId: req.params.id,
         createdBy: req.user!.id,
-        status: req.user!.role === "admin" ? "approved" : "pending",
+        status,
       });
 
       // Log activity
