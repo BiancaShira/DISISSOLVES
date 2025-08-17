@@ -14,8 +14,8 @@ import type { QuestionWithAuthor } from "@shared/schema";
 export default function Dashboard() {
   const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState("");
-  const [statusFilter, setStatusFilter] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
   const [sortBy, setSortBy] = useState("recent");
   const [showRaiseIssueModal, setShowRaiseIssueModal] = useState(false);
 
@@ -24,8 +24,8 @@ export default function Dashboard() {
     queryKey: ["/api/questions", { category: categoryFilter, status: statusFilter, search: searchQuery, sortBy }],
     queryFn: async () => {
       const params = new URLSearchParams();
-      if (categoryFilter) params.append("category", categoryFilter);
-      if (statusFilter) params.append("status", statusFilter);
+      if (categoryFilter && categoryFilter !== "all") params.append("category", categoryFilter);
+      if (statusFilter && statusFilter !== "all") params.append("status", statusFilter);
       if (searchQuery) params.append("search", searchQuery);
       if (sortBy) params.append("sortBy", sortBy);
       
@@ -156,7 +156,7 @@ export default function Dashboard() {
                         <SelectValue placeholder="All Categories" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">All Categories</SelectItem>
+                        <SelectItem value="all">All Categories</SelectItem>
                         <SelectItem value="ibml">IBML Scanners</SelectItem>
                         <SelectItem value="softtrac">SoftTrac</SelectItem>
                         <SelectItem value="omniscan">OmniScan</SelectItem>
@@ -171,7 +171,7 @@ export default function Dashboard() {
                         <SelectValue placeholder="All Status" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">All Status</SelectItem>
+                        <SelectItem value="all">All Status</SelectItem>
                         <SelectItem value="pending">Pending</SelectItem>
                         <SelectItem value="approved">Approved</SelectItem>
                         <SelectItem value="rejected">Rejected</SelectItem>
