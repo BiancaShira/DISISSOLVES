@@ -31,6 +31,7 @@ export default function AuthPage() {
   };
 
   const handleRegister = (e: React.FormEvent) => {
+    console.log(registerForm)
     e.preventDefault();
     registerMutation.mutate(registerForm);
   };

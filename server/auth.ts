@@ -74,6 +74,7 @@ export function setupAuth(app: Express) {
   app.post("/api/register", async (req, res, next) => {
     try {
       const validatedData = insertUserSchema.parse(req.body);
+      console.log(validatedData)
       
       const existingUser = await storage.getUserByUsername(validatedData.username);
       if (existingUser) {
