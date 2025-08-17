@@ -21,9 +21,16 @@ export default function Dashboard() {
 
   // Handle sidebar filter changes
   const handleFilterChange = (filters: { sortBy?: string; category?: string; status?: string }) => {
-    if (filters.sortBy) setSortBy(filters.sortBy);
-    if (filters.category) setCategoryFilter(filters.category);
-    if (filters.status) setStatusFilter(filters.status);
+    if (filters.sortBy !== undefined) setSortBy(filters.sortBy);
+    if (filters.category !== undefined) setCategoryFilter(filters.category);
+    if (filters.status !== undefined) setStatusFilter(filters.status);
+    
+    // Clear filters if empty object is passed
+    if (Object.keys(filters).length === 0) {
+      setSortBy("recent");
+      setCategoryFilter("all");
+      setStatusFilter(user?.role === "user" ? "approved" : "all");
+    }
   };
 
   // Handle raise issue from sidebar
@@ -37,7 +44,9 @@ export default function Dashboard() {
     queryFn: async () => {
       const params = new URLSearchParams();
       if (categoryFilter && categoryFilter !== "all") params.append("category", categoryFilter);
-      if (statusFilter && statusFilter !== "all") params.append("status", statusFilter);
+      // For regular users, only show approved questions unless explicitly filtering
+      const effectiveStatus = user?.role === "user" && statusFilter === "all" ? "approved" : statusFilter;
+      if (effectiveStatus && effectiveStatus !== "all") params.append("status", effectiveStatus);
       if (searchQuery) params.append("search", searchQuery);
       if (sortBy) params.append("sortBy", sortBy);
       

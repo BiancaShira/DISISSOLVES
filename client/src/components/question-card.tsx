@@ -102,7 +102,7 @@ export function QuestionCard({ question }: QuestionCardProps) {
   });
 
   const handleCardClick = () => {
-    setLocation(`/question/${question.id}`);
+    setLocation(`/questions/${question.id}`);
   };
 
   return (

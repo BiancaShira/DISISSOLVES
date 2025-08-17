@@ -9,13 +9,19 @@ import NotFound from "@/pages/not-found";
 import AuthPage from "@/pages/auth-page";
 import Dashboard from "@/pages/dashboard";
 import QuestionDetail from "@/pages/question-detail";
+import Analytics from "@/pages/analytics";
+import UserManagement from "@/pages/user-management";
+import Activity from "@/pages/activity";
 import { ProtectedRoute } from "./lib/protected-route";
 
 function Router() {
   return (
     <Switch>
       <ProtectedRoute path="/" component={Dashboard} />
-      <ProtectedRoute path="/question/:id" component={QuestionDetail} />
+      <ProtectedRoute path="/questions/:id" component={QuestionDetail} />
+      <ProtectedRoute path="/analytics" component={Analytics} />
+      <ProtectedRoute path="/users" component={UserManagement} />
+      <ProtectedRoute path="/activity" component={Activity} />
       <Route path="/auth" component={AuthPage} />
       <Route component={NotFound} />
     </Switch>

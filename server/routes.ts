@@ -167,6 +167,67 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/analytics", requireAuth, requireRole(["admin"]), async (req, res) => {
+    try {
+      const analytics = await storage.getAnalyticsData();
+      res.json(analytics);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch analytics" });
+    }
+  });
+
+  // User management routes
+  app.get("/api/users", requireAuth, requireRole(["admin"]), async (req, res) => {
+    try {
+      const users = await storage.getAllUsers();
+      res.json(users);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch users" });
+    }
+  });
+
+  app.patch("/api/users/:id", requireAuth, requireRole(["admin"]), async (req, res) => {
+    try {
+      const { role, firstName, lastName } = req.body;
+      const updates: any = {};
+      if (role) updates.role = role;
+      if (firstName !== undefined) updates.firstName = firstName;
+      if (lastName !== undefined) updates.lastName = lastName;
+      
+      await storage.updateUser(req.params.id, updates);
+      res.sendStatus(200);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update user" });
+    }
+  });
+
+  app.delete("/api/users/:id", requireAuth, requireRole(["admin"]), async (req, res) => {
+    try {
+      if (req.params.id === req.user!.id) {
+        return res.status(400).json({ message: "Cannot delete your own account" });
+      }
+      await storage.deleteUser(req.params.id);
+      res.sendStatus(200);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete user" });
+    }
+  });
+
+  // Activity routes
+  app.get("/api/activity/:userId", requireAuth, async (req, res) => {
+    try {
+      // Users can only view their own activity unless they're admin
+      if (req.params.userId !== req.user!.id && req.user!.role !== "admin") {
+        return res.status(403).json({ message: "Can only view your own activity" });
+      }
+      
+      const activity = await storage.getUserActivity(req.params.userId);
+      res.json(activity);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch activity" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

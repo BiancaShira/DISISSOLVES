@@ -14,7 +14,7 @@ import { ArrowLeft, Clock, Eye, User, MessageCircle, Send, Check, X } from "luci
 import type { QuestionWithAuthor, AnswerWithAuthor } from "@shared/schema";
 
 export default function QuestionDetail() {
-  const [match, params] = useRoute("/question/:id");
+  const [match, params] = useRoute("/questions/:id");
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();

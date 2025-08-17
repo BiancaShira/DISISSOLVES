@@ -11,6 +11,9 @@ export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  getAllUsers(): Promise<User[]>;
+  updateUser(id: string, updates: Partial<InsertUser>): Promise<void>;
+  deleteUser(id: string): Promise<void>;
   
   // Questions
   getQuestions(filters?: {
@@ -20,6 +23,7 @@ export interface IStorage {
     sortBy?: "trending" | "recent" | "views" | "answers";
     limit?: number;
     offset?: number;
+    userId?: string; // For user-specific queries
   }): Promise<QuestionWithAuthor[]>;
   getQuestionById(id: string): Promise<QuestionWithAuthor | undefined>;
   createQuestion(question: InsertQuestion & { createdBy: string }): Promise<Question>;
@@ -33,6 +37,7 @@ export interface IStorage {
   
   // Activity log
   logActivity(activity: { userId: string; action: string }): Promise<void>;
+  getUserActivity(userId: string): Promise<any[]>;
   
   // Analytics
   getStats(): Promise<{
@@ -41,12 +46,19 @@ export interface IStorage {
     activeUsers: number;
     resolutionRate: number;
   }>;
+  getAnalyticsData(): Promise<{
+    questionsByCategory: any[];
+    questionsByStatus: any[];
+    answersByStatus: any[];
+    topUsers: any[];
+    trendingQuestions: any[];
+  }>;
   
-  sessionStore: session.SessionStore;
+  sessionStore: any;
 }
 
 export class DatabaseStorage implements IStorage {
-  sessionStore: session.SessionStore;
+  sessionStore: any;
 
   constructor() {
     this.sessionStore = new PostgresSessionStore({ 
@@ -80,10 +92,11 @@ export class DatabaseStorage implements IStorage {
     sortBy?: "trending" | "recent" | "views" | "answers";
     limit?: number;
     offset?: number;
+    userId?: string;
   } = {}): Promise<QuestionWithAuthor[]> {
-    const { category, status, search, sortBy = "recent", limit = 20, offset = 0 } = filters;
+    const { category, status, search, sortBy = "recent", limit = 20, offset = 0, userId } = filters;
     
-    let query = db
+    const baseQuery = db
       .select({
         id: questions.id,
         title: questions.title,
@@ -111,6 +124,7 @@ export class DatabaseStorage implements IStorage {
     const conditions = [];
     if (category) conditions.push(eq(questions.category, category as any));
     if (status) conditions.push(eq(questions.status, status as any));
+    if (userId) conditions.push(eq(questions.createdBy, userId));
     if (search) {
       conditions.push(
         or(
@@ -120,6 +134,7 @@ export class DatabaseStorage implements IStorage {
       );
     }
 
+    let query = baseQuery;
     if (conditions.length > 0) {
       query = query.where(and(...conditions));
     }
@@ -245,10 +260,57 @@ export class DatabaseStorage implements IStorage {
       .where(eq(answers.id, id));
   }
 
+  async getAllUsers(): Promise<User[]> {
+    return await db.select().from(users).orderBy(desc(users.createdAt));
+  }
+
+  async updateUser(id: string, updates: Partial<InsertUser>): Promise<void> {
+    await db
+      .update(users)
+      .set(updates)
+      .where(eq(users.id, id));
+  }
+
+  async deleteUser(id: string): Promise<void> {
+    await db.delete(users).where(eq(users.id, id));
+  }
+
   async logActivity(activity: { userId: string; action: string }): Promise<void> {
     await db
       .insert(activityLog)
       .values(activity);
+  }
+
+  async getUserActivity(userId: string): Promise<any[]> {
+    const userQuestions = await db
+      .select({
+        id: questions.id,
+        title: questions.title,
+        createdAt: questions.createdAt,
+        status: questions.status,
+        type: sql`'question'`.as('type'),
+      })
+      .from(questions)
+      .where(eq(questions.createdBy, userId))
+      .orderBy(desc(questions.createdAt));
+
+    const userAnswers = await db
+      .select({
+        id: answers.id,
+        questionId: answers.questionId,
+        createdAt: answers.createdAt,
+        status: answers.status,
+        type: sql`'answer'`.as('type'),
+        questionTitle: questions.title,
+      })
+      .from(answers)
+      .leftJoin(questions, eq(answers.questionId, questions.id))
+      .where(eq(answers.createdBy, userId))
+      .orderBy(desc(answers.createdAt));
+
+    // Combine and sort by date
+    const activities = [...userQuestions, ...userAnswers];
+    return activities.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   }
 
   async getStats(): Promise<{
@@ -291,6 +353,77 @@ export class DatabaseStorage implements IStorage {
       pendingApprovals: Number(pendingApprovalsResult.count) + Number(pendingAnswersResult.count),
       activeUsers: Number(activeUsersResult.count),
       resolutionRate,
+    };
+  }
+
+  async getAnalyticsData(): Promise<{
+    questionsByCategory: any[];
+    questionsByStatus: any[];
+    answersByStatus: any[];
+    topUsers: any[];
+    trendingQuestions: any[];
+  }> {
+    const questionsByCategory = await db
+      .select({
+        category: questions.category,
+        count: count(),
+      })
+      .from(questions)
+      .groupBy(questions.category);
+
+    const questionsByStatus = await db
+      .select({
+        status: questions.status,
+        count: count(),
+      })
+      .from(questions)
+      .groupBy(questions.status);
+
+    const answersByStatus = await db
+      .select({
+        status: answers.status,
+        count: count(),
+      })
+      .from(answers)
+      .groupBy(answers.status);
+
+    const topUsers = await db
+      .select({
+        userId: users.id,
+        username: users.username,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        questionCount: count(questions.id),
+        answerCount: count(answers.id),
+      })
+      .from(users)
+      .leftJoin(questions, eq(questions.createdBy, users.id))
+      .leftJoin(answers, eq(answers.createdBy, users.id))
+      .groupBy(users.id, users.username, users.firstName, users.lastName)
+      .orderBy(desc(count(questions.id)));
+
+    const trendingQuestions = await db
+      .select({
+        id: questions.id,
+        title: questions.title,
+        views: questions.views,
+        answerCount: count(answers.id),
+        category: questions.category,
+        createdAt: questions.createdAt,
+      })
+      .from(questions)
+      .leftJoin(answers, and(eq(answers.questionId, questions.id), eq(answers.status, "approved")))
+      .where(eq(questions.status, "approved"))
+      .groupBy(questions.id, questions.title, questions.views, questions.category, questions.createdAt)
+      .orderBy(desc(sql`(${questions.views} + ${count(answers.id)} * 2)`))
+      .limit(10);
+
+    return {
+      questionsByCategory,
+      questionsByStatus,
+      answersByStatus,
+      topUsers,
+      trendingQuestions,
     };
   }
 }

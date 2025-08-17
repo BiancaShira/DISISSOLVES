@@ -103,7 +103,7 @@ export function Sidebar({ onFilterChange, onRaiseIssue }: SidebarProps = {}) {
               }
             </p>
             <Badge className={getRoleColor(user?.role || "user")}>
-              {user?.role?.charAt(0).toUpperCase() + user?.role?.slice(1)}
+              {user?.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : "User"}
             </Badge>
           </div>
         </div>
@@ -193,10 +193,7 @@ export function Sidebar({ onFilterChange, onRaiseIssue }: SidebarProps = {}) {
             <Button 
               variant="ghost" 
               className="w-full justify-start"
-              onClick={() => {
-                setLocation("/");
-                onFilterChange?.({ sortBy: "analytics" });
-              }}
+              onClick={() => setLocation("/analytics")}
             >
               <BarChart3 className="mr-3 h-4 w-4" />
               Analytics
@@ -205,10 +202,7 @@ export function Sidebar({ onFilterChange, onRaiseIssue }: SidebarProps = {}) {
             <Button 
               variant="ghost" 
               className="w-full justify-start"
-              onClick={() => {
-                // TODO: Create user management page
-                alert("User management feature coming soon!");
-              }}
+              onClick={() => setLocation("/users")}
             >
               <Users className="mr-3 h-4 w-4" />
               User Management
@@ -218,7 +212,11 @@ export function Sidebar({ onFilterChange, onRaiseIssue }: SidebarProps = {}) {
         
         {/* Activity Log */}
         <div className="pt-4 border-t border-border">
-          <Button variant="ghost" className="w-full justify-start">
+          <Button 
+            variant="ghost" 
+            className="w-full justify-start"
+            onClick={() => setLocation("/activity")}
+          >
             <History className="mr-3 h-4 w-4" />
             My Activity
           </Button>
