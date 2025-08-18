@@ -159,14 +159,28 @@ export function Sidebar({ onFilterChange, onRaiseIssue }: SidebarProps = {}) {
           Browse All
         </Button>
         
-        <Button 
-          variant="ghost" 
-          className="w-full justify-start"
-          onClick={() => onRaiseIssue?.()}
-        >
-          <Plus className="mr-3 h-4 w-4" />
-          Raise Issue
-        </Button>
+        {/* Role-based action button */}
+        {user?.role === "admin" ? (
+          <Button 
+            variant="ghost" 
+            className="w-full justify-start bg-lime-green/10 text-lime-green hover:bg-lime-green/20"
+            onClick={() => onRaiseIssue?.()}
+            data-testid="button-post-issue-answer"
+          >
+            <Plus className="mr-3 h-4 w-4" />
+            Post Issue + Answer
+          </Button>
+        ) : (
+          <Button 
+            variant="ghost" 
+            className="w-full justify-start bg-lime-green/10 text-lime-green hover:bg-lime-green/20"
+            onClick={() => onRaiseIssue?.()}
+            data-testid="button-raise-issue"
+          >
+            <Plus className="mr-3 h-4 w-4" />
+            Raise Issue
+          </Button>
+        )}
         
         {/* Admin-only sections */}
         {user?.role === "admin" && (
@@ -210,17 +224,20 @@ export function Sidebar({ onFilterChange, onRaiseIssue }: SidebarProps = {}) {
           </div>
         )}
         
-        {/* Activity Log */}
-        <div className="pt-4 border-t border-border">
-          <Button 
-            variant="ghost" 
-            className="w-full justify-start"
-            onClick={() => setLocation("/activity")}
-          >
-            <History className="mr-3 h-4 w-4" />
-            My Activity
-          </Button>
-        </div>
+        {/* Activity Log - Only for Supervisor and Admin */}
+        {(user?.role === "supervisor" || user?.role === "admin") && (
+          <div className="pt-4 border-t border-border">
+            <Button 
+              variant="ghost" 
+              className="w-full justify-start"
+              onClick={() => setLocation("/activity")}
+              data-testid="button-my-activity"
+            >
+              <History className="mr-3 h-4 w-4" />
+              My Activity
+            </Button>
+          </div>
+        )}
       </nav>
       
       {/* Logout */}

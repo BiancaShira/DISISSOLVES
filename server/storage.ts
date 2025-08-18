@@ -1,7 +1,7 @@
 import { users, questions, answers, activityLog, type User, type InsertUser, type Question, type InsertQuestion, type Answer, type InsertAnswer, type QuestionWithAuthor, type AnswerWithAuthor } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, asc, count, and, or, like, sql } from "drizzle-orm";
-import session, { Store } from "express-session";
+import session from "express-session";
 import MySQLStoreFactory from "express-mysql-session";
 import mysql from "mysql2/promise";
 

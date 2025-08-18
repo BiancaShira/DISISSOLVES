@@ -30,7 +30,6 @@ export function RaiseIssueModal({ open, onOpenChange }: RaiseIssueModalProps) {
     title: "",
     description: "",
     category: "",
-    priority: "medium" as "low" | "medium" | "high" | "urgent",
   });
 
   const createQuestionMutation = useMutation({
@@ -47,7 +46,7 @@ export function RaiseIssueModal({ open, onOpenChange }: RaiseIssueModalProps) {
       queryClient.invalidateQueries({ queryKey: ["/api/questions"] });
       queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
       onOpenChange(false);
-      setFormData({ title: "", description: "", category: "", priority: "medium" });
+      setFormData({ title: "", description: "", category: "" });
     },
     onError: () => {
       toast({
@@ -119,25 +118,7 @@ export function RaiseIssueModal({ open, onOpenChange }: RaiseIssueModalProps) {
             />
           </div>
           
-          <div>
-            <Label htmlFor="priority">Priority Level</Label>
-            <Select 
-              value={formData.priority} 
-              onValueChange={(value: "low" | "medium" | "high" | "urgent") => 
-                setFormData({ ...formData, priority: value })
-              }
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="low">Low - Minor inconvenience</SelectItem>
-                <SelectItem value="medium">Medium - Affecting productivity</SelectItem>
-                <SelectItem value="high">High - Blocking critical work</SelectItem>
-                <SelectItem value="urgent">Urgent - System down</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+
           
           <div className="flex justify-end space-x-3 pt-4 border-t">
             <Button 

@@ -1,0 +1,97 @@
+🛠️ Updated Fix & Feature Prompt for DisiSolves
+
+The system DisiSolves requires updates to correct user permissions, improve admin functionality, and simplify workflows. Below are the corrected requirements.
+
+🔑 User Role (Fixes & Updates)
+
+Allowed Functionality
+
+View:
+
+Trending questions
+
+Most recent issues
+
+All available questions
+
+Raise an issue (submit a question via a “Raise an Issue” form).
+
+Restrictions
+
+Users must not be able to post answers.
+
+Remove any answer submission options from the User dashboard.
+
+UI Updates
+
+Remove the status bar (pending/approved tracking is unnecessary for users).
+
+Keep a clean and simple interface focused only on raising and viewing questions.
+
+🔑 Supervisor Role (Reminder from earlier fixes)
+
+Can post questions (requires admin approval).
+
+Can post answers (requires admin approval).
+
+Can view trending, most recent, all available questions.
+
+Can view their own activity.
+
+Sidebar functions (Dashboard, Browse All, My Activity) must work properly.
+
+🔑 Admin Role (Fixes & Updates)
+
+Post Question + Answer Together
+
+Instead of having a separate “Raise an Issue” option, replace it with a combined form where Admins can:
+
+Post a new issue/question.
+
+Provide an answer to it immediately.
+
+The posted question + answer should be visible right away without requiring approval.
+
+No priority levels are needed.
+
+Answer Posting (Fix)
+
+Admins should still be able to post answers to existing questions if needed.
+
+Sidebar Fixes
+
+Browse All → Show all questions with answers (filter by category, search, etc.).
+
+Analytics → Reporting station showing activity (questions by category, answers posted, user engagement, trending issues, etc.).
+
+User Management → Fully functional (add/edit/delete users, assign roles).
+
+🎨 UI/UX Adjustments
+
+User Dashboard:
+
+Clean design with Trending, Recent, All Questions, and Raise Issue.
+
+No status bar, no answer posting option.
+
+Admin Dashboard:
+
+Replace “Raise an Issue” with “Post Issue + Answer” form.
+
+Ability to manage users, approve supervisor content, and view analytics.
+
+Supervisor Dashboard:
+
+Separate options to post questions and answers.
+
+Sidebar features must work (Dashboard, Browse All, My Activity).
+
+🚀 Deliverables
+
+User: Only view + raise issues, no answers, no status bar.
+
+Supervisor: Can post questions & answers (pending approval), fully working sidebar.
+
+Admin: Can post questions with answers in a single step, can also add answers to existing questions, functional analytics and user management.
+
+System must remain lightweight, responsive, and support both dark/light themes.

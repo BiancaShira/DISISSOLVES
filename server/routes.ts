@@ -201,15 +201,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/users", requireAuth, requireRole(["admin"]), async (req, res) => {
+    try {
+      const { username, password, firstName, lastName, role } = req.body;
+      
+      // Check if username already exists
+      const existingUser = await storage.getUserByUsername(username);
+      if (existingUser) {
+        return res.status(400).json({ message: "Username already exists" });
+      }
+
+      const newUser = await storage.createUser({
+        username,
+        password,
+        firstName,
+        lastName,
+        role: role || "user",
+      });
+
+      // Log activity
+      await storage.logActivity({
+        userId: req.user!.id,
+        action: `Created user: ${username}`,
+      });
+
+      res.status(201).json(newUser);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to create user" });
+    }
+  });
+
   app.patch("/api/users/:id", requireAuth, requireRole(["admin"]), async (req, res) => {
     try {
-      const { role, firstName, lastName } = req.body;
+      const { role, firstName, lastName, username, password } = req.body;
       const updates: any = {};
       if (role) updates.role = role;
       if (firstName !== undefined) updates.firstName = firstName;
       if (lastName !== undefined) updates.lastName = lastName;
+      if (username) updates.username = username;
+      if (password) updates.password = password;
       
       await storage.updateUser(req.params.id, updates);
+      
+      // Log activity
+      await storage.logActivity({
+        userId: req.user!.id,
+        action: `Updated user: ${req.params.id}`,
+      });
+      
       res.sendStatus(200);
     } catch (error) {
       res.status(500).json({ message: "Failed to update user" });

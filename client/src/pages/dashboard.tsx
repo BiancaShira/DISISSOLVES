@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Sidebar } from "@/components/sidebar";
 import { QuestionCard } from "../components/question-card";
 import { RaiseIssueModal } from "../components/raise-issue-modal";
+import { AdminPostModal } from "../components/admin-post-modal";
 import { useAuth } from "@/hooks/use-auth";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -18,6 +19,7 @@ export default function Dashboard() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [sortBy, setSortBy] = useState("recent");
   const [showRaiseIssueModal, setShowRaiseIssueModal] = useState(false);
+  const [showAdminPostModal, setShowAdminPostModal] = useState(false);
 
   // Handle sidebar filter changes
   const handleFilterChange = (filters: { sortBy?: string; category?: string; status?: string }) => {
@@ -33,9 +35,13 @@ export default function Dashboard() {
     }
   };
 
-  // Handle raise issue from sidebar
+  // Handle raise issue from sidebar based on user role
   const handleRaiseIssue = () => {
-    setShowRaiseIssueModal(true);
+    if (user?.role === "admin") {
+      setShowAdminPostModal(true);
+    } else {
+      setShowRaiseIssueModal(true);
+    }
   };
 
   // Fetch questions
@@ -188,20 +194,23 @@ export default function Dashboard() {
                     </Select>
                   </div>
 
-                  <div className="flex items-center space-x-2">
-                    <label className="text-sm font-medium text-foreground">Status:</label>
-                    <Select value={statusFilter} onValueChange={setStatusFilter}>
-                      <SelectTrigger className="w-40">
-                        <SelectValue placeholder="All Status" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Status</SelectItem>
-                        <SelectItem value="pending">Pending</SelectItem>
-                        <SelectItem value="approved">Approved</SelectItem>
-                        <SelectItem value="rejected">Rejected</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                  {/* Status filter - Only for Admin and Supervisor */}
+                  {(user?.role === "admin" || user?.role === "supervisor") && (
+                    <div className="flex items-center space-x-2">
+                      <label className="text-sm font-medium text-foreground">Status:</label>
+                      <Select value={statusFilter} onValueChange={setStatusFilter}>
+                        <SelectTrigger className="w-40">
+                          <SelectValue placeholder="All Status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Status</SelectItem>
+                          <SelectItem value="pending">Pending</SelectItem>
+                          <SelectItem value="approved">Approved</SelectItem>
+                          <SelectItem value="rejected">Rejected</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
 
                   <div className="flex items-center space-x-2">
                     <label className="text-sm font-medium text-foreground">Sort by:</label>
@@ -226,13 +235,25 @@ export default function Dashboard() {
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="text-xl font-semibold text-foreground">Questions</h3>
-              <Button 
-                onClick={() => setShowRaiseIssueModal(true)}
-                className="bg-lime-green text-dark-green hover:bg-lime-green/90"
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                Raise New Issue
-              </Button>
+              {user?.role === "admin" ? (
+                <Button 
+                  onClick={() => setShowAdminPostModal(true)}
+                  className="bg-lime-green text-dark-green hover:bg-lime-green/90"
+                  data-testid="button-post-issue-answer-main"
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Post Issue + Answer
+                </Button>
+              ) : (
+                <Button 
+                  onClick={() => setShowRaiseIssueModal(true)}
+                  className="bg-lime-green text-dark-green hover:bg-lime-green/90"
+                  data-testid="button-raise-issue-main"
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Raise Issue
+                </Button>
+              )}
             </div>
 
             {questionsLoading ? (
@@ -256,10 +277,15 @@ export default function Dashboard() {
         </div>
       </main>
 
-      {/* Raise Issue Modal */}
+      {/* Modals */}
       <RaiseIssueModal 
         open={showRaiseIssueModal} 
         onOpenChange={setShowRaiseIssueModal}
+      />
+      
+      <AdminPostModal 
+        open={showAdminPostModal} 
+        onOpenChange={setShowAdminPostModal}
       />
     </div>
   );

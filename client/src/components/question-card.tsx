@@ -111,15 +111,18 @@ export function QuestionCard({ question }: QuestionCardProps) {
         <div className="flex items-start justify-between">
           <div className="flex-1">
             <div className="flex items-center space-x-3 mb-3">
-              <Badge className={getCategoryColor(question.category)}>
+              <Badge className={getCategoryColor(question.category)} data-testid={`badge-category-${question.category}`}>
                 {getCategoryLabel(question.category)}
               </Badge>
-              <Badge className={getStatusColor(question.status)}>
-                {question.status === "pending" && <Clock className="mr-1 h-3 w-3" />}
-                {question.status === "approved" && <Check className="mr-1 h-3 w-3" />}
-                {question.status === "rejected" && <X className="mr-1 h-3 w-3" />}
-                {question.status.charAt(0).toUpperCase() + question.status.slice(1)}
-              </Badge>
+              {/* Status badge - Only show for Admin and Supervisor */}
+              {(user?.role === "admin" || user?.role === "supervisor") && (
+                <Badge className={getStatusColor(question.status)} data-testid={`badge-status-${question.status}`}>
+                  {question.status === "pending" && <Clock className="mr-1 h-3 w-3" />}
+                  {question.status === "approved" && <Check className="mr-1 h-3 w-3" />}
+                  {question.status === "rejected" && <X className="mr-1 h-3 w-3" />}
+                  {question.status.charAt(0).toUpperCase() + question.status.slice(1)}
+                </Badge>
+              )}
             </div>
             
             <h4 className="text-lg font-semibold text-foreground mb-2 hover:text-primary">

@@ -1,23 +1,15 @@
-import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useAuth } from "@/hooks/use-auth";
 import { Sidebar } from "@/components/sidebar";
-import { RaiseIssueModal } from "@/components/raise-issue-modal";
+import { useAuth } from "@/hooks/use-auth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BarChart3, TrendingUp, Users, CheckCircle, Clock, Eye } from "lucide-react";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
-
-const COLORS = ['#052E16', '#84CC16', '#22c55e', '#16a34a', '#15803d'];
+import { Badge } from "@/components/ui/badge";
+import { BarChart3, TrendingUp, Users, MessageCircle, Eye, Clock } from "lucide-react";
 
 export default function Analytics() {
   const { user } = useAuth();
-  const [showRaiseIssueModal, setShowRaiseIssueModal] = useState(false);
 
-  const handleRaiseIssue = () => {
-    setShowRaiseIssueModal(true);
-  };
-
-  const { data: analytics, isLoading } = useQuery({
+  // Fetch comprehensive stats
+  const { data: stats, isLoading } = useQuery({
     queryKey: ["/api/analytics"],
     queryFn: async () => {
       const response = await fetch("/api/analytics");
@@ -27,189 +19,193 @@ export default function Analytics() {
     enabled: user?.role === "admin",
   });
 
-  const { data: stats } = useQuery({
-    queryKey: ["/api/stats"],
+  const { data: trendingQuestions = [] } = useQuery({
+    queryKey: ["/api/questions", { sortBy: "trending", limit: 5 }],
     queryFn: async () => {
-      const response = await fetch("/api/stats");
-      if (!response.ok) throw new Error("Failed to fetch stats");
+      const response = await fetch("/api/questions?sortBy=trending&limit=5");
+      if (!response.ok) throw new Error("Failed to fetch trending questions");
       return response.json();
     },
     enabled: user?.role === "admin",
   });
 
+  // Redirect if not admin
   if (user?.role !== "admin") {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-foreground mb-4">Access Denied</h1>
-          <p className="text-muted-foreground">You need admin privileges to view analytics.</p>
-        </div>
+      <div className="min-h-screen bg-background">
+        <Sidebar />
+        <main className="ml-64 min-h-screen p-8">
+          <Card>
+            <CardContent className="p-8 text-center">
+              <p className="text-muted-foreground">Access denied. Admin privileges required.</p>
+            </CardContent>
+          </Card>
+        </main>
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-background">
-      <Sidebar onRaiseIssue={handleRaiseIssue} />
+      <Sidebar />
       
-      <main className="ml-64 min-h-screen">
-        <header className="bg-card border-b border-border p-6">
-          <div className="flex items-center space-x-4">
-            <BarChart3 className="h-8 w-8 text-primary" />
-            <div>
-              <h2 className="text-2xl font-bold text-foreground">Analytics Dashboard</h2>
-              <p className="text-muted-foreground">System insights and reporting</p>
-            </div>
+      <main className="ml-64 min-h-screen p-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-foreground mb-2">Analytics Dashboard</h1>
+            <p className="text-muted-foreground">System activity and performance metrics</p>
           </div>
-        </header>
-
-        <div className="p-6">
-          {/* Key Stats */}
-          {stats && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">Total Questions</p>
-                      <p className="text-3xl font-bold text-foreground">{stats.totalQuestions}</p>
-                    </div>
-                    <TrendingUp className="h-8 w-8 text-blue-600" />
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">Pending Approvals</p>
-                      <p className="text-3xl font-bold text-orange-600">{stats.pendingApprovals}</p>
-                    </div>
-                    <Clock className="h-8 w-8 text-orange-600" />
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">Active Users</p>
-                      <p className="text-3xl font-bold text-foreground">{stats.activeUsers}</p>
-                    </div>
-                    <Users className="h-8 w-8 text-green-600" />
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">Resolution Rate</p>
-                      <p className="text-3xl font-bold text-foreground">{stats.resolutionRate}%</p>
-                    </div>
-                    <CheckCircle className="h-8 w-8 text-lime-600" />
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          )}
 
           {isLoading ? (
             <div className="text-center py-8">
               <p className="text-muted-foreground">Loading analytics...</p>
             </div>
-          ) : analytics ? (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Questions by Category */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Questions by Category</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ResponsiveContainer width="100%" height={300}>
-                    <BarChart data={analytics.questionsByCategory}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="category" />
-                      <YAxis />
-                      <Tooltip />
-                      <Bar dataKey="count" fill="#84CC16" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </Card>
+          ) : (
+            <>
+              {/* Key Metrics */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <Card data-testid="card-total-questions">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Total Questions</CardTitle>
+                    <MessageCircle className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{stats?.totalQuestions || 0}</div>
+                    <p className="text-xs text-muted-foreground">
+                      {stats?.questionsThisWeek || 0} this week
+                    </p>
+                  </CardContent>
+                </Card>
 
-              {/* Questions by Status */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Questions by Status</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ResponsiveContainer width="100%" height={300}>
-                    <PieChart>
-                      <Pie
-                        data={analytics.questionsByStatus}
-                        cx="50%"
-                        cy="50%"
-                        labelLine={false}
-                        label={(entry) => `${entry.status}: ${entry.count}`}
-                        outerRadius={80}
-                        fill="#8884d8"
-                        dataKey="count"
-                      >
-                        {analytics.questionsByStatus.map((entry: any, index: number) => (
-                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                        ))}
-                      </Pie>
-                      <Tooltip />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </Card>
+                <Card data-testid="card-total-answers">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Total Answers</CardTitle>
+                    <Users className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{stats?.totalAnswers || 0}</div>
+                    <p className="text-xs text-muted-foreground">
+                      {stats?.answersThisWeek || 0} this week
+                    </p>
+                  </CardContent>
+                </Card>
 
-              {/* Trending Questions */}
-              <Card className="lg:col-span-2">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Eye className="h-5 w-5" />
-                    Trending Questions
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {analytics.trendingQuestions?.slice(0, 5).map((question: any, index: number) => (
-                      <div key={question.id} className="flex items-center justify-between p-4 border border-border rounded-lg">
-                        <div className="flex-1">
-                          <p className="font-medium text-foreground">{question.title}</p>
-                          <div className="flex items-center space-x-4 text-sm text-muted-foreground mt-1">
-                            <span className="bg-lime-100 text-lime-800 dark:bg-lime-900/20 dark:text-lime-300 px-2 py-1 rounded text-xs">
-                              {question.category}
-                            </span>
-                            <span>{question.views} views</span>
-                            <span>{question.answerCount} answers</span>
+                <Card data-testid="card-pending-approvals">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Pending Approvals</CardTitle>
+                    <Clock className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{stats?.pendingApprovals || 0}</div>
+                    <p className="text-xs text-muted-foreground">
+                      Questions + Answers
+                    </p>
+                  </CardContent>
+                </Card>
+
+                <Card data-testid="card-total-views">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Total Views</CardTitle>
+                    <Eye className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{stats?.totalViews || 0}</div>
+                    <p className="text-xs text-muted-foreground">
+                      All time views
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {/* Questions by Category */}
+                <Card data-testid="card-questions-by-category">
+                  <CardHeader>
+                    <CardTitle className="flex items-center space-x-2">
+                      <BarChart3 className="h-5 w-5" />
+                      <span>Questions by Category</span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {stats?.questionsByCategory?.map((item: any) => (
+                        <div key={item.category} className="flex items-center justify-between">
+                          <div className="flex items-center space-x-2">
+                            <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-300">
+                              {item.category === "ibml" ? "IBML Scanners" : 
+                               item.category === "softtrac" ? "SoftTrac" : 
+                               item.category === "omniscan" ? "OmniScan" : item.category}
+                            </Badge>
                           </div>
+                          <span className="font-semibold">{item.count}</span>
                         </div>
-                        <div className="text-2xl font-bold text-muted-foreground">#{index + 1}</div>
-                      </div>
-                    ))}
+                      )) || (
+                        <p className="text-muted-foreground text-center">No data available</p>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Trending Issues */}
+                <Card data-testid="card-trending-issues">
+                  <CardHeader>
+                    <CardTitle className="flex items-center space-x-2">
+                      <TrendingUp className="h-5 w-5" />
+                      <span>Trending Issues</span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {trendingQuestions.length > 0 ? (
+                        trendingQuestions.map((question: any) => (
+                          <div key={question.id} className="border-b border-border last:border-b-0 pb-3 last:pb-0">
+                            <h4 className="font-medium text-sm mb-1">{question.title}</h4>
+                            <div className="flex items-center space-x-3 text-xs text-muted-foreground">
+                              <span className="flex items-center space-x-1">
+                                <Eye className="h-3 w-3" />
+                                <span>{question.views}</span>
+                              </span>
+                              <span className="flex items-center space-x-1">
+                                <MessageCircle className="h-3 w-3" />
+                                <span>{question.answerCount}</span>
+                              </span>
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <p className="text-muted-foreground text-center">No trending questions</p>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* User Engagement */}
+              <Card className="mt-8" data-testid="card-user-engagement">
+                <CardHeader>
+                  <CardTitle>User Engagement</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-dark-green">{stats?.activeUsers || 0}</div>
+                      <p className="text-sm text-muted-foreground">Active Users</p>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-lime-green">{stats?.avgQuestionsPerUser || 0}</div>
+                      <p className="text-sm text-muted-foreground">Avg Questions/User</p>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-blue-600">{stats?.avgAnswersPerQuestion || 0}</div>
+                      <p className="text-sm text-muted-foreground">Avg Answers/Question</p>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
-            </div>
-          ) : (
-            <div className="text-center py-8">
-              <p className="text-muted-foreground">No analytics data available.</p>
-            </div>
+            </>
           )}
         </div>
       </main>
-      
-      <RaiseIssueModal 
-        isOpen={showRaiseIssueModal} 
-        onClose={() => setShowRaiseIssueModal(false)} 
-      />
     </div>
   );
 }
