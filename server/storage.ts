@@ -26,8 +26,10 @@ export interface IStorage {
     userId?: string; // For user-specific queries
   }): Promise<QuestionWithAuthor[]>;
   getQuestionById(id: string): Promise<QuestionWithAuthor | undefined>;
-  createQuestion(question: InsertQuestion & { createdBy: string }): Promise<Question>;
+  createQuestion(question: InsertQuestion & { createdBy: string; isFinal?: number }): Promise<Question>;
   updateQuestionStatus(id: string, status: "pending" | "approved" | "rejected"): Promise<void>;
+  updateQuestionFinalStatus(id: string, isFinal: number): Promise<void>;
+  deleteQuestion(id: string): Promise<void>;
   incrementQuestionViews(id: string): Promise<void>;
   
   // Answers
@@ -113,6 +115,8 @@ export class DatabaseStorage implements IStorage {
         createdAt: questions.createdAt,
         status: questions.status,
         views: questions.views,
+        isFinal: questions.isFinal,
+        attachment: questions.attachment,
         author: {
           id: users.id,
           username: users.username,
@@ -183,6 +187,8 @@ export class DatabaseStorage implements IStorage {
         createdAt: questions.createdAt,
         status: questions.status,
         views: questions.views,
+        isFinal: questions.isFinal,
+        attachment: questions.attachment,
         author: {
           id: users.id,
           username: users.username,
@@ -205,7 +211,7 @@ export class DatabaseStorage implements IStorage {
     } as QuestionWithAuthor;
   }
 
-  async createQuestion(question: InsertQuestion & { createdBy: string }): Promise<Question> {
+  async createQuestion(question: InsertQuestion & { createdBy: string; isFinal?: number }): Promise<Question> {
     await db
       .insert(questions)
       .values(question);
@@ -273,6 +279,25 @@ export class DatabaseStorage implements IStorage {
       .limit(1);
     
     return createdAnswer;
+  }
+
+  async updateQuestionFinalStatus(id: string, isFinal: number): Promise<void> {
+    await db
+      .update(questions)
+      .set({ isFinal })
+      .where(eq(questions.id, id));
+  }
+
+  async deleteQuestion(id: string): Promise<void> {
+    // First delete all related answers
+    await db
+      .delete(answers)
+      .where(eq(answers.questionId, id));
+    
+    // Then delete the question
+    await db
+      .delete(questions)
+      .where(eq(questions.id, id));
   }
 
   async updateAnswerStatus(id: string, status: "pending" | "approved" | "rejected"): Promise<void> {

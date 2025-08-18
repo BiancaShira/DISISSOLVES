@@ -39,11 +39,14 @@ export function AdminPostModal({ open, onOpenChange }: AdminPostModalProps) {
 
   const createQuestionWithAnswerMutation = useMutation({
     mutationFn: async () => {
-      // First create the question
-      const questionResponse = await apiRequest("POST", "/api/questions", questionData);
+      // First create the question with admin privileges (approved + final)
+      const questionResponse = await apiRequest("POST", "/api/questions", {
+        ...questionData,
+        isFinal: 1, // Admin questions are final
+      });
       const question = await questionResponse.json();
       
-      // Then create the answer for the question
+      // Then create the answer for the question (admin answers are automatically approved)
       await apiRequest("POST", "/api/answers", {
         questionId: question.id,
         answerText: answerData.answerText,

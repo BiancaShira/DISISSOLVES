@@ -223,6 +223,11 @@ export default function QuestionDetail() {
                       {question.status === "rejected" && <X className="mr-1 h-3 w-3" />}
                       {question.status.charAt(0).toUpperCase() + question.status.slice(1)}
                     </Badge>
+                    {question.isFinal === 1 && (
+                      <Badge variant="destructive" className="bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-300">
+                        FINAL ANSWER
+                      </Badge>
+                    )}
                   </div>
                   <CardTitle className="text-2xl mb-4">{question.title}</CardTitle>
                 </div>
@@ -340,8 +345,8 @@ export default function QuestionDetail() {
             </CardContent>
           </Card>
 
-          {/* Answer Form - Available to all authenticated users */}
-          {user && (
+          {/* Answer Form - Available to supervisors and admins, but not for final questions */}
+          {user && (user.role === "supervisor" || user.role === "admin") && question.status === "approved" && question.isFinal !== 1 && (
             <Card>
               <CardHeader>
                 <CardTitle>Submit an Answer</CardTitle>
@@ -377,8 +382,8 @@ export default function QuestionDetail() {
       </main>
 
       <RaiseIssueModal 
-        isOpen={showRaiseIssueModal} 
-        onClose={() => setShowRaiseIssueModal(false)} 
+        open={showRaiseIssueModal} 
+        onOpenChange={setShowRaiseIssueModal} 
       />
     </div>
   );

@@ -29,6 +29,8 @@ export const questions = mysqlTable("questions", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
   status: statusEnum.notNull().default("pending"),
   views: int("views").default(0).notNull(),
+  isFinal: int("is_final").default(0).notNull(), // 0 = false, 1 = true for admin posted questions
+  attachment: text("attachment"), // Optional image attachment path
 });
 
 export const answers = mysqlTable("answers", {
@@ -38,6 +40,7 @@ export const answers = mysqlTable("answers", {
   createdBy: varchar("created_by", { length: 36 }).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   status: statusEnum.notNull().default("pending"),
+  attachment: text("attachment"), // Optional image attachment path
 });
 
 export const activityLog = mysqlTable("activity_log", {
@@ -91,6 +94,7 @@ export const insertQuestionSchema = createInsertSchema(questions).omit({
   createdAt: true,
   views: true,
   createdBy: true,
+  isFinal: true, // This will be set programmatically
 });
 
 export const insertAnswerSchema = createInsertSchema(answers).omit({

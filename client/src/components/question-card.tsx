@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { Clock, Eye, MessageCircle, User, Check, X } from "lucide-react";
+import { Clock, Eye, MessageCircle, User, Check, X, Trash2 } from "lucide-react";
 import type { QuestionWithAuthor } from "@shared/schema";
 
 interface QuestionCardProps {
@@ -46,7 +46,7 @@ export function QuestionCard({ question }: QuestionCardProps) {
     }
   };
 
-  const getTimeAgo = (date: string) => {
+  const getTimeAgo = (date: string | Date) => {
     const now = new Date();
     const created = new Date(date);
     const diffInHours = Math.floor((now.getTime() - created.getTime()) / (1000 * 60 * 60));
@@ -96,6 +96,27 @@ export function QuestionCard({ question }: QuestionCardProps) {
       toast({
         title: "Error",
         description: "Failed to reject question.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteQuestionMutation = useMutation({
+    mutationFn: async () => {
+      await apiRequest("DELETE", `/api/questions/${question.id}`);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Question deleted",
+        description: "The rejected question has been permanently deleted.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/questions"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to delete question.",
         variant: "destructive",
       });
     },
@@ -186,6 +207,26 @@ export function QuestionCard({ question }: QuestionCardProps) {
                       className="text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
                     >
                       <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
+                
+                {/* Admin delete actions for rejected questions */}
+                {user?.role === "admin" && question.status === "rejected" && (
+                  <div className="flex items-center space-x-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (window.confirm("Are you sure you want to permanently delete this rejected question?")) {
+                          deleteQuestionMutation.mutate();
+                        }
+                      }}
+                      disabled={deleteQuestionMutation.isPending}
+                      className="text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+                    >
+                      <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
                 )}
