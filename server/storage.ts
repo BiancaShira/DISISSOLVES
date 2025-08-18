@@ -1,12 +1,11 @@
 import { users, questions, answers, activityLog, type User, type InsertUser, type Question, type InsertQuestion, type Answer, type InsertAnswer, type QuestionWithAuthor, type AnswerWithAuthor } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, asc, count, and, or, like, sql } from "drizzle-orm";
+import MemoryStore from "memorystore";
 import session from "express-session";
-import MySQLStoreFactory from "express-mysql-session";
-import mysql from "mysql2/promise";
 
-// Create MySQL session store
-const MySQLStore = MySQLStoreFactory(session);
+// Use memory store for sessions (in-memory for Replit compatibility)
+const SessionStore = MemoryStore(session);
 
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
@@ -62,24 +61,10 @@ export class DatabaseStorage implements IStorage {
   sessionStore: any;
 
   constructor() {
-    const sessionStoreOptions = {
-      host: process.env.DB_HOST || 'localhost',
-      port: parseInt(process.env.DB_PORT || '3306'),
-      user: process.env.DB_USER || 'root',
-      password: process.env.DB_PASSWORD || '',
-      database: process.env.DB_NAME || 'disisolves',
-      createDatabaseTable: true,
-      schema: {
-        tableName: 'sessions',
-        columnNames: {
-          session_id: 'session_id',
-          expires: 'expires',
-          data: 'data'
-        }
-      }
-    };
-    
-    this.sessionStore = new MySQLStore(sessionStoreOptions);
+    // Use memory store for session storage in Replit environment
+    this.sessionStore = new SessionStore({
+      checkPeriod: 86400000 // prune expired entries every 24h
+    });
   }
 
   async getUser(id: string): Promise<User | undefined> {
