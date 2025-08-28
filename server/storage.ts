@@ -313,7 +313,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getUsersByRole(role: string): Promise<User[]> {
-    return await db.select().from(users).where(eq(users.role, role)).orderBy(desc(users.createdAt));
+    return await db.select().from(users).where(eq(users.role, role as any)).orderBy(desc(users.createdAt));
   }
 
   async updateUser(id: string, updates: Partial<InsertUser>): Promise<void> {

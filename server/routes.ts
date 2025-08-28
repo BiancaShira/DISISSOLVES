@@ -93,27 +93,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         action: `Created question: ${question.title}`,
       });
 
-      // Send email notification to admins for new issues raised by users
+      // Send email notification to IT department for new issues raised by users
       if (req.user!.role === "user") {
         try {
-          const admins = await storage.getUsersByRole("admin");
-          const adminEmails = admins
-            .map(admin => admin.email)
-            .filter(email => email && email.trim() !== "");
+          const itEmail = "itintern@disigroup.com";
+          const userDisplayName = req.user!.firstName && req.user!.lastName 
+            ? `${req.user!.firstName} ${req.user!.lastName}` 
+            : req.user!.username;
 
-          if (adminEmails.length > 0) {
-            const userDisplayName = req.user!.firstName && req.user!.lastName 
-              ? `${req.user!.firstName} ${req.user!.lastName}` 
-              : req.user!.username;
-
-            await emailService.sendIssueNotification(
-              adminEmails,
-              validatedData.title,
-              validatedData.description,
-              validatedData.category,
-              userDisplayName
-            );
-          }
+          await emailService.sendIssueNotification(
+            [itEmail],
+            validatedData.title,
+            validatedData.description,
+            validatedData.category,
+            userDisplayName
+          );
         } catch (emailError) {
           // Don't fail the question creation if email fails
           console.error("Failed to send email notification:", emailError);
@@ -228,26 +222,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         action: `Answered question`,
       });
 
-      // Send email notification to admins for supervisor answers needing approval
+      // Send email notification to IT department for supervisor answers needing approval
       if (req.user!.role === "supervisor" && status === "pending") {
         try {
-          const admins = await storage.getUsersByRole("admin");
-          const adminEmails = admins
-            .map(admin => admin.email)
-            .filter(email => email && email.trim() !== "");
+          const itEmail = "itintern@disigroup.com";
+          const supervisorDisplayName = req.user!.firstName && req.user!.lastName 
+            ? `${req.user!.firstName} ${req.user!.lastName}` 
+            : req.user!.username;
 
-          if (adminEmails.length > 0) {
-            const supervisorDisplayName = req.user!.firstName && req.user!.lastName 
-              ? `${req.user!.firstName} ${req.user!.lastName}` 
-              : req.user!.username;
-
-            await emailService.sendAnswerApprovalNotification(
-              adminEmails,
-              question.title,
-              supervisorDisplayName,
-              answerText.trim()
-            );
-          }
+          await emailService.sendAnswerApprovalNotification(
+            [itEmail],
+            question.title,
+            supervisorDisplayName,
+            answerText.trim()
+          );
         } catch (emailError) {
           // Don't fail the answer creation if email fails
           console.error("Failed to send answer approval notification:", emailError);
