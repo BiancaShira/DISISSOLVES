@@ -5,20 +5,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Wrench, Shield, Users, TrendingUp } from "lucide-react";
 
 export default function AuthPage() {
-  const { user, loginMutation, registerMutation } = useAuth();
+  const { user, loginMutation } = useAuth();
   const [loginForm, setLoginForm] = useState({ username: "", password: "" });
-  const [registerForm, setRegisterForm] = useState({
-    username: "",
-    password: "",
-    firstName: "",
-    lastName: "",
-    role: "user" as "user" | "supervisor" | "admin",
-  });
 
   // Redirect if already logged in
   if (user) {
@@ -28,12 +19,6 @@ export default function AuthPage() {
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     loginMutation.mutate(loginForm);
-  };
-
-  const handleRegister = (e: React.FormEvent) => {
-    console.log(registerForm)
-    e.preventDefault();
-    registerMutation.mutate(registerForm);
   };
 
   return (
@@ -51,123 +36,48 @@ export default function AuthPage() {
             <p className="text-gray-600 dark:text-gray-400 mt-2">Internal Troubleshooting Platform</p>
           </div>
 
-          <Tabs defaultValue="login" className="space-y-4">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="login">Login</TabsTrigger>
-              <TabsTrigger value="register">Register</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="login">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Welcome Back</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <form onSubmit={handleLogin} className="space-y-4">
-                    <div>
-                      <Label htmlFor="username">Username</Label>
-                      <Input
-                        id="username"
-                        type="text"
-                        value={loginForm.username}
-                        onChange={(e) => setLoginForm({ ...loginForm, username: e.target.value })}
-                        required
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="password">Password</Label>
-                      <Input
-                        id="password"
-                        type="password"
-                        value={loginForm.password}
-                        onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
-                        required
-                      />
-                    </div>
-                    <Button
-                      type="submit"
-                      className="w-full bg-lime-green text-dark-green hover:bg-lime-green/90"
-                      disabled={loginMutation.isPending}
-                    >
-                      {loginMutation.isPending ? "Signing in..." : "Sign In"}
-                    </Button>
-                  </form>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="register">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Create Account</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <form onSubmit={handleRegister} className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor="firstName">First Name</Label>
-                        <Input
-                          id="firstName"
-                          type="text"
-                          value={registerForm.firstName}
-                          onChange={(e) => setRegisterForm({ ...registerForm, firstName: e.target.value })}
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="lastName">Last Name</Label>
-                        <Input
-                          id="lastName"
-                          type="text"
-                          value={registerForm.lastName}
-                          onChange={(e) => setRegisterForm({ ...registerForm, lastName: e.target.value })}
-                        />
-                      </div>
-                    </div>
-                    <div>
-                      <Label htmlFor="regUsername">Username</Label>
-                      <Input
-                        id="regUsername"
-                        type="text"
-                        value={registerForm.username}
-                        onChange={(e) => setRegisterForm({ ...registerForm, username: e.target.value })}
-                        required
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="regPassword">Password</Label>
-                      <Input
-                        id="regPassword"
-                        type="password"
-                        value={registerForm.password}
-                        onChange={(e) => setRegisterForm({ ...registerForm, password: e.target.value })}
-                        required
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="role">Role</Label>
-                      <Select value={registerForm.role} onValueChange={(value: "user" | "supervisor" | "admin") => setRegisterForm({ ...registerForm, role: value })}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="user">User</SelectItem>
-                          <SelectItem value="supervisor">Supervisor</SelectItem>
-                          <SelectItem value="admin">Admin</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <Button
-                      type="submit"
-                      className="w-full bg-lime-green text-dark-green hover:bg-lime-green/90"
-                      disabled={registerMutation.isPending}
-                    >
-                      {registerMutation.isPending ? "Creating account..." : "Create Account"}
-                    </Button>
-                  </form>
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
+          <Card>
+            <CardHeader>
+              <CardTitle>Welcome Back</CardTitle>
+              <p className="text-sm text-muted-foreground mt-2">
+                Please use your assigned credentials to access the system
+              </p>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleLogin} className="space-y-4">
+                <div>
+                  <Label htmlFor="username">Username</Label>
+                  <Input
+                    id="username"
+                    type="text"
+                    value={loginForm.username}
+                    onChange={(e) => setLoginForm({ ...loginForm, username: e.target.value })}
+                    required
+                    data-testid="input-username"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="password">Password</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    value={loginForm.password}
+                    onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
+                    required
+                    data-testid="input-password"
+                  />
+                </div>
+                <Button
+                  type="submit"
+                  className="w-full bg-lime-green text-dark-green hover:bg-lime-green/90 font-bold text-lg py-6"
+                  disabled={loginMutation.isPending}
+                  data-testid="button-login"
+                >
+                  {loginMutation.isPending ? "Signing in..." : "Sign In"}
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
         </div>
       </div>
 

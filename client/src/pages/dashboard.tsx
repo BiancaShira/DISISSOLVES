@@ -104,6 +104,7 @@ export default function Dashboard() {
                   className="pl-10 w-80"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
+                  data-testid="input-search"
                 />
               </div>
             </div>

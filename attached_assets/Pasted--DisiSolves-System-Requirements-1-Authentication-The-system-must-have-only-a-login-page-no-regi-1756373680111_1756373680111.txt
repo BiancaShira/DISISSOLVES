@@ -1,0 +1,151 @@
+📌 DisiSolves System Requirements
+1. Authentication
+
+The system must have only a login page (no registration).
+
+Create 8 predefined accounts:
+
+Admins (Password: P@ssw0rd)
+
+admin
+
+superadmin
+
+QC Supervisors (Password: disi@2025)
+
+qcsupervisor1
+
+qcsupervisor2
+
+Validation Supervisors (Password: disi@2025)
+
+valsupervisor1
+
+valsupervisor2
+
+Scanner Supervisors (Password: disi@2025)
+
+scannersupervisor1
+
+scannersupervisor2
+
+Users (Password: disi2025)
+
+user1
+
+user2
+
+2. Sidebar Menus
+
+Admin Sidebar:
+
+Dashboard
+
+Browse All
+
+Analytics (must update dynamically as new questions/answers are created)
+
+User Management
+
+Raise Issue (Q&A in one)
+
+Logout (bottom)
+
+Supervisor Sidebar (QC, Validation, Scanner):
+
+Dashboard
+
+Browse All
+
+My Activity
+
+Raise Issue
+
+Logout
+
+User Sidebar:
+
+Dashboard
+
+Browse All
+
+My Activity
+
+Raise Issue
+
+Logout
+
+3. Questions & Answers Flow
+
+Users:
+
+Can raise questions/issues.
+
+Can attach images when raising questions.
+
+Submitted questions become immediately visible to Supervisors (no Admin approval required at this stage).
+
+Supervisors:
+
+Can see user questions.
+
+Can post answers (with image attachments).
+
+Supervisor answers stay hidden from users until approved by an Admin.
+
+Admins:
+
+Can raise issues with answers directly.
+
+Can approve/reject supervisor answers.
+
+Can delete rejected questions/answers.
+
+Once Admin posts or approves an answer → it is final (no edits, no second answers).
+
+Both questions and answers must support image attachments.
+
+4. UI Fixes
+
+Submit Button:
+
+Must be redesigned to look clear, bold, and highly visible for both posting questions and answers (especially for Admin).
+
+Search Bar:
+
+Must be fully functional across all roles to search questions/issues.
+
+Analytics Dashboard:
+
+Must be dynamic, updating in real time with:
+
+Number of issues raised
+
+Number of issues answered
+
+Pending approvals
+
+Issues by user role (Users vs Supervisors vs Admins)
+
+5. Email Notifications
+
+When a user raises a question/issue, send an email alert to both Admin accounts (admin, superadmin).
+
+Email text should be:
+
+Subject: New Issue Raised
+Body: A new issue has been raised by [username]. Please log in to review.
+
+👉 This checklist prompt ensures:
+
+All accounts are predefined with passwords.
+
+Sidebars are role-specific and working.
+
+Search bar + analytics are fixed.
+
+Submit button is clear.
+
+Image uploads work for both questions and answers.
+
+Admins get email alerts when new issues are raised.

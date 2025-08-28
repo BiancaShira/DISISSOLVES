@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Send } from "lucide-react";
+import { Send, Upload, X } from "lucide-react";
 
 interface RaiseIssueModalProps {
   open: boolean;
@@ -31,9 +31,11 @@ export function RaiseIssueModal({ open, onOpenChange }: RaiseIssueModalProps) {
     description: "",
     category: "",
   });
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const createQuestionMutation = useMutation({
-    mutationFn: async (data: typeof formData) => {
+    mutationFn: async (data: typeof formData & { attachment?: string }) => {
       await apiRequest("POST", "/api/questions", data);
     },
     onSuccess: () => {
@@ -47,6 +49,10 @@ export function RaiseIssueModal({ open, onOpenChange }: RaiseIssueModalProps) {
       queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
       onOpenChange(false);
       setFormData({ title: "", description: "", category: "" });
+      setSelectedFile(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
     },
     onError: () => {
       toast({
@@ -57,7 +63,39 @@ export function RaiseIssueModal({ open, onOpenChange }: RaiseIssueModalProps) {
     },
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Validate file type and size
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+      if (!allowedTypes.includes(file.type)) {
+        toast({
+          title: "Invalid file type",
+          description: "Please select a JPEG, PNG, GIF, or WebP image.",
+          variant: "destructive",
+        });
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) { // 5MB limit
+        toast({
+          title: "File too large",
+          description: "Please select an image smaller than 5MB.",
+          variant: "destructive",
+        });
+        return;
+      }
+      setSelectedFile(file);
+    }
+  };
+
+  const removeFile = () => {
+    setSelectedFile(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.title || !formData.description || !formData.category) {
       toast({
@@ -67,7 +105,17 @@ export function RaiseIssueModal({ open, onOpenChange }: RaiseIssueModalProps) {
       });
       return;
     }
-    createQuestionMutation.mutate(formData);
+
+    let attachment = "";
+    if (selectedFile) {
+      // For now, we'll just store the filename. In a real app, you'd upload to a storage service
+      attachment = selectedFile.name;
+    }
+
+    createQuestionMutation.mutate({
+      ...formData,
+      attachment: attachment || undefined,
+    });
   };
 
   return (
@@ -115,10 +163,63 @@ export function RaiseIssueModal({ open, onOpenChange }: RaiseIssueModalProps) {
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               required
+              data-testid="textarea-description"
             />
           </div>
-          
 
+          {/* Image Attachment */}
+          <div>
+            <Label>Attach Image (Optional)</Label>
+            <div className="space-y-3">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleFileSelect}
+                className="hidden"
+                data-testid="input-file"
+              />
+              
+              {!selectedFile ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-full h-20 border-dashed border-2 border-gray-300 hover:border-gray-400"
+                  data-testid="button-upload"
+                >
+                  <div className="flex flex-col items-center space-y-1">
+                    <Upload className="h-6 w-6 text-gray-400" />
+                    <span className="text-sm text-gray-600">Click to upload image</span>
+                    <span className="text-xs text-gray-400">JPEG, PNG, GIF, WebP (max 5MB)</span>
+                  </div>
+                </Button>
+              ) : (
+                <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-8 h-8 bg-green-100 dark:bg-green-900/20 rounded-lg flex items-center justify-center">
+                      <Upload className="h-4 w-4 text-green-600 dark:text-green-400" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-foreground">{selectedFile.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={removeFile}
+                    data-testid="button-remove-file"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
+            </div>
+          </div>
           
           <div className="flex justify-end space-x-3 pt-4 border-t">
             <Button 
@@ -131,10 +232,11 @@ export function RaiseIssueModal({ open, onOpenChange }: RaiseIssueModalProps) {
             <Button
               type="submit"
               disabled={createQuestionMutation.isPending}
-              className="bg-lime-green text-dark-green hover:bg-lime-green/90"
+              className="bg-lime-green text-dark-green hover:bg-lime-green/90 font-bold text-lg py-6 px-8 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
+              data-testid="button-submit-issue"
             >
-              <Send className="mr-2 h-4 w-4" />
-              {createQuestionMutation.isPending ? "Submitting..." : "Submit Issue"}
+              <Send className="mr-3 h-5 w-5" />
+              {createQuestionMutation.isPending ? "SUBMITTING..." : "SUBMIT ISSUE"}
             </Button>
           </div>
         </form>

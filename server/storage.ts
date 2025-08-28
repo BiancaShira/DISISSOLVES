@@ -1,6 +1,6 @@
 import { users, questions, answers, activityLog, type User, type InsertUser, type Question, type InsertQuestion, type Answer, type InsertAnswer, type QuestionWithAuthor, type AnswerWithAuthor } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, asc, count, and, or, like, sql } from "drizzle-orm";
+import { eq, desc, asc, count, sum, and, or, like, sql } from "drizzle-orm";
 import MemoryStore from "memorystore";
 import session from "express-session";
 
@@ -12,6 +12,7 @@ export interface IStorage {
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   getAllUsers(): Promise<User[]>;
+  getUsersByRole(role: string): Promise<User[]>;
   updateUser(id: string, updates: Partial<InsertUser>): Promise<void>;
   deleteUser(id: string): Promise<void>;
   
@@ -311,6 +312,10 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(users).orderBy(desc(users.createdAt));
   }
 
+  async getUsersByRole(role: string): Promise<User[]> {
+    return await db.select().from(users).where(eq(users.role, role)).orderBy(desc(users.createdAt));
+  }
+
   async updateUser(id: string, updates: Partial<InsertUser>): Promise<void> {
     await db
       .update(users)
@@ -404,12 +409,62 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAnalyticsData(): Promise<{
+    totalQuestions: number;
+    totalAnswers: number;
+    questionsThisWeek: number;
+    answersThisWeek: number;
+    pendingApprovals: number;
+    totalViews: number;
     questionsByCategory: any[];
     questionsByStatus: any[];
     answersByStatus: any[];
+    questionsByRole: any;
     topUsers: any[];
     trendingQuestions: any[];
+    activeUsers: number;
+    avgQuestionsPerUser: number;
+    avgAnswersPerQuestion: number;
+    avgResponseTime: number;
+    avgResolutionTime: number;
   }> {
+    // Basic counts
+    const [totalQuestionsResult] = await db
+      .select({ count: count() })
+      .from(questions);
+
+    const [totalAnswersResult] = await db
+      .select({ count: count() })
+      .from(answers);
+
+    const [questionsThisWeekResult] = await db
+      .select({ count: count() })
+      .from(questions)
+      .where(sql`${questions.createdAt} > NOW() - INTERVAL '7 days'`);
+
+    const [answersThisWeekResult] = await db
+      .select({ count: count() })
+      .from(answers)
+      .where(sql`${answers.createdAt} > NOW() - INTERVAL '7 days'`);
+
+    const [pendingQuestionsResult] = await db
+      .select({ count: count() })
+      .from(questions)
+      .where(eq(questions.status, "pending"));
+
+    const [pendingAnswersResult] = await db
+      .select({ count: count() })
+      .from(answers)
+      .where(eq(answers.status, "pending"));
+
+    const [totalViewsResult] = await db
+      .select({ totalViews: sum(questions.views) })
+      .from(questions);
+
+    const [activeUsersResult] = await db
+      .select({ count: count() })
+      .from(users)
+      .where(sql`${users.createdAt} > NOW() - INTERVAL '30 days'`);
+
     const questionsByCategory = await db
       .select({
         category: questions.category,
@@ -433,6 +488,15 @@ export class DatabaseStorage implements IStorage {
       })
       .from(answers)
       .groupBy(answers.status);
+
+    const questionsByRole = await db
+      .select({
+        role: users.role,
+        count: count(),
+      })
+      .from(questions)
+      .leftJoin(users, eq(questions.createdBy, users.id))
+      .groupBy(users.role);
 
     const topUsers = await db
       .select({
@@ -465,12 +529,38 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(sql`(${questions.views} + ${count(answers.id)} * 2)`))
       .limit(10);
 
+    // Calculate derived metrics
+    const totalQuestions = Number(totalQuestionsResult.count);
+    const totalAnswers = Number(totalAnswersResult.count);
+    const activeUsers = Number(activeUsersResult.count);
+
+    const avgQuestionsPerUser = activeUsers > 0 ? Math.round(totalQuestions / activeUsers * 10) / 10 : 0;
+    const avgAnswersPerQuestion = totalQuestions > 0 ? Math.round(totalAnswers / totalQuestions * 10) / 10 : 0;
+
+    // Convert questionsByRole array to object
+    const questionsByRoleObj = questionsByRole.reduce((acc: any, item: any) => {
+      acc[item.role] = Number(item.count);
+      return acc;
+    }, {});
+
     return {
+      totalQuestions,
+      totalAnswers,
+      questionsThisWeek: Number(questionsThisWeekResult.count),
+      answersThisWeek: Number(answersThisWeekResult.count),
+      pendingApprovals: Number(pendingQuestionsResult.count) + Number(pendingAnswersResult.count),
+      totalViews: Number(totalViewsResult.totalViews) || 0,
       questionsByCategory,
       questionsByStatus,
       answersByStatus,
+      questionsByRole: questionsByRoleObj,
       topUsers,
       trendingQuestions,
+      activeUsers,
+      avgQuestionsPerUser,
+      avgAnswersPerQuestion,
+      avgResponseTime: 2.5, // Mock data for now
+      avgResolutionTime: 8.2, // Mock data for now
     };
   }
 }

@@ -28,6 +28,49 @@ async function comparePasswords(supplied: string, stored: string) {
   return timingSafeEqual(hashedBuf, suppliedBuf);
 }
 
+export async function initializePredefinedUsers() {
+  try {
+    const predefinedUsers = [
+      // Admins (Password: P@ssw0rd)
+      { username: "admin", password: "P@ssw0rd", role: "admin", firstName: "Admin", lastName: "User", supervisorType: null },
+      { username: "superadmin", password: "P@ssw0rd", role: "admin", firstName: "Super", lastName: "Admin", supervisorType: null },
+      
+      // QC Supervisors (Password: disi@2025)
+      { username: "qcsupervisor1", password: "disi@2025", role: "supervisor", firstName: "QC", lastName: "Supervisor 1", supervisorType: "qc" },
+      { username: "qcsupervisor2", password: "disi@2025", role: "supervisor", firstName: "QC", lastName: "Supervisor 2", supervisorType: "qc" },
+      
+      // Validation Supervisors (Password: disi@2025)
+      { username: "valsupervisor1", password: "disi@2025", role: "supervisor", firstName: "Validation", lastName: "Supervisor 1", supervisorType: "validation" },
+      { username: "valsupervisor2", password: "disi@2025", role: "supervisor", firstName: "Validation", lastName: "Supervisor 2", supervisorType: "validation" },
+      
+      // Scanner Supervisors (Password: disi@2025)
+      { username: "scannersupervisor1", password: "disi@2025", role: "supervisor", firstName: "Scanner", lastName: "Supervisor 1", supervisorType: "scanner" },
+      { username: "scannersupervisor2", password: "disi@2025", role: "supervisor", firstName: "Scanner", lastName: "Supervisor 2", supervisorType: "scanner" },
+      
+      // Users (Password: disi2025)
+      { username: "user1", password: "disi2025", role: "user", firstName: "Test", lastName: "User 1", supervisorType: null },
+      { username: "user2", password: "disi2025", role: "user", firstName: "Test", lastName: "User 2", supervisorType: null },
+    ];
+
+    for (const userData of predefinedUsers) {
+      const existingUser = await storage.getUserByUsername(userData.username);
+      if (!existingUser) {
+        await storage.createUser({
+          username: userData.username,
+          password: await hashPassword(userData.password),
+          role: userData.role as any,
+          supervisorType: userData.supervisorType as any,
+          firstName: userData.firstName,
+          lastName: userData.lastName,
+        });
+        console.log(`Created predefined user: ${userData.username}`);
+      }
+    }
+  } catch (error) {
+    console.error("Error initializing predefined users:", error);
+  }
+}
+
 export function setupAuth(app: Express) {
   const sessionSettings: session.SessionOptions = {
     secret: process.env.SESSION_SECRET || "default-secret-key",

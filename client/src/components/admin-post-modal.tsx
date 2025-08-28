@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
@@ -15,7 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Send, Plus } from "lucide-react";
+import { Send, Plus, Upload, X } from "lucide-react";
 
 interface AdminPostModalProps {
   open: boolean;
@@ -36,6 +36,10 @@ export function AdminPostModal({ open, onOpenChange }: AdminPostModalProps) {
   const [answerData, setAnswerData] = useState({
     answerText: "",
   });
+  const [questionFile, setQuestionFile] = useState<File | null>(null);
+  const [answerFile, setAnswerFile] = useState<File | null>(null);
+  const questionFileInputRef = useRef<HTMLInputElement>(null);
+  const answerFileInputRef = useRef<HTMLInputElement>(null);
 
   const createQuestionWithAnswerMutation = useMutation({
     mutationFn: async () => {
@@ -64,6 +68,14 @@ export function AdminPostModal({ open, onOpenChange }: AdminPostModalProps) {
       onOpenChange(false);
       setQuestionData({ title: "", description: "", category: "" });
       setAnswerData({ answerText: "" });
+      setQuestionFile(null);
+      setAnswerFile(null);
+      if (questionFileInputRef.current) {
+        questionFileInputRef.current.value = "";
+      }
+      if (answerFileInputRef.current) {
+        answerFileInputRef.current.value = "";
+      }
     },
     onError: () => {
       toast({
@@ -73,6 +85,50 @@ export function AdminPostModal({ open, onOpenChange }: AdminPostModalProps) {
       });
     },
   });
+
+  const handleFileSelect = (fileType: 'question' | 'answer') => (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Validate file type and size
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+      if (!allowedTypes.includes(file.type)) {
+        toast({
+          title: "Invalid file type",
+          description: "Please select a JPEG, PNG, GIF, or WebP image.",
+          variant: "destructive",
+        });
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) { // 5MB limit
+        toast({
+          title: "File too large",
+          description: "Please select an image smaller than 5MB.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      if (fileType === 'question') {
+        setQuestionFile(file);
+      } else {
+        setAnswerFile(file);
+      }
+    }
+  };
+
+  const removeFile = (fileType: 'question' | 'answer') => () => {
+    if (fileType === 'question') {
+      setQuestionFile(null);
+      if (questionFileInputRef.current) {
+        questionFileInputRef.current.value = "";
+      }
+    } else {
+      setAnswerFile(null);
+      if (answerFileInputRef.current) {
+        answerFileInputRef.current.value = "";
+      }
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -146,6 +202,50 @@ export function AdminPostModal({ open, onOpenChange }: AdminPostModalProps) {
                   </SelectContent>
                 </Select>
               </div>
+
+              {/* Question Image Attachment */}
+              <div className="space-y-2">
+                <Label>Attach Image to Question (Optional)</Label>
+                <input
+                  ref={questionFileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileSelect('question')}
+                  className="hidden"
+                  data-testid="input-question-file"
+                />
+                
+                {!questionFile ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => questionFileInputRef.current?.click()}
+                    className="w-full h-16 border-dashed border-2 border-gray-300 hover:border-gray-400"
+                    data-testid="button-question-upload"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <Upload className="h-4 w-4 text-gray-400" />
+                      <span className="text-sm text-gray-600">Upload question image</span>
+                    </div>
+                  </Button>
+                ) : (
+                  <div className="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-800 rounded-lg border">
+                    <div className="flex items-center space-x-2">
+                      <Upload className="h-4 w-4 text-green-600" />
+                      <span className="text-sm">{questionFile.name}</span>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={removeFile('question')}
+                      data-testid="button-remove-question-file"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
+              </div>
             </CardContent>
           </Card>
 
@@ -167,6 +267,50 @@ export function AdminPostModal({ open, onOpenChange }: AdminPostModalProps) {
                   required
                 />
               </div>
+
+              {/* Answer Image Attachment */}
+              <div className="space-y-2">
+                <Label>Attach Image to Answer (Optional)</Label>
+                <input
+                  ref={answerFileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileSelect('answer')}
+                  className="hidden"
+                  data-testid="input-answer-file"
+                />
+                
+                {!answerFile ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => answerFileInputRef.current?.click()}
+                    className="w-full h-16 border-dashed border-2 border-gray-300 hover:border-gray-400"
+                    data-testid="button-answer-upload"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <Upload className="h-4 w-4 text-gray-400" />
+                      <span className="text-sm text-gray-600">Upload answer image</span>
+                    </div>
+                  </Button>
+                ) : (
+                  <div className="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-800 rounded-lg border">
+                    <div className="flex items-center space-x-2">
+                      <Upload className="h-4 w-4 text-green-600" />
+                      <span className="text-sm">{answerFile.name}</span>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={removeFile('answer')}
+                      data-testid="button-remove-answer-file"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
+              </div>
             </CardContent>
           </Card>
 
@@ -183,14 +327,14 @@ export function AdminPostModal({ open, onOpenChange }: AdminPostModalProps) {
               type="submit" 
               disabled={createQuestionWithAnswerMutation.isPending}
               data-testid="button-submit"
-              className="bg-dark-green hover:bg-dark-green/90"
+              className="bg-dark-green hover:bg-dark-green/90 font-bold text-lg py-6 px-8 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
             >
               {createQuestionWithAnswerMutation.isPending ? (
-                "Posting..."
+                "POSTING..."
               ) : (
                 <>
-                  <Send className="mr-2 h-4 w-4" />
-                  Post Question + Answer
+                  <Send className="mr-3 h-5 w-5" />
+                  POST QUESTION + ANSWER
                 </>
               )}
             </Button>

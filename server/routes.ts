@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { setupAuth } from "./auth";
 import { storage } from "./storage";
 import { insertQuestionSchema, insertAnswerSchema } from "@shared/schema";
+import { emailService } from "./email";
 
 function requireAuth(req: any, res: any, next: any) {
   if (!req.isAuthenticated()) {
@@ -91,6 +92,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
         userId: req.user!.id,
         action: `Created question: ${question.title}`,
       });
+
+      // Send email notification to admins for new issues raised by users
+      if (req.user!.role === "user") {
+        try {
+          const admins = await storage.getUsersByRole("admin");
+          const adminEmails = admins
+            .map(admin => admin.email)
+            .filter(email => email && email.trim() !== "");
+
+          if (adminEmails.length > 0) {
+            const userDisplayName = req.user!.firstName && req.user!.lastName 
+              ? `${req.user!.firstName} ${req.user!.lastName}` 
+              : req.user!.username;
+
+            await emailService.sendIssueNotification(
+              adminEmails,
+              validatedData.title,
+              validatedData.description,
+              validatedData.category,
+              userDisplayName
+            );
+          }
+        } catch (emailError) {
+          // Don't fail the question creation if email fails
+          console.error("Failed to send email notification:", emailError);
+        }
+      }
 
       res.status(201).json(question);
     } catch (error) {
@@ -199,6 +227,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
         userId: req.user!.id,
         action: `Answered question`,
       });
+
+      // Send email notification to admins for supervisor answers needing approval
+      if (req.user!.role === "supervisor" && status === "pending") {
+        try {
+          const admins = await storage.getUsersByRole("admin");
+          const adminEmails = admins
+            .map(admin => admin.email)
+            .filter(email => email && email.trim() !== "");
+
+          if (adminEmails.length > 0) {
+            const supervisorDisplayName = req.user!.firstName && req.user!.lastName 
+              ? `${req.user!.firstName} ${req.user!.lastName}` 
+              : req.user!.username;
+
+            await emailService.sendAnswerApprovalNotification(
+              adminEmails,
+              question.title,
+              supervisorDisplayName,
+              answerText.trim()
+            );
+          }
+        } catch (emailError) {
+          // Don't fail the answer creation if email fails
+          console.error("Failed to send answer approval notification:", emailError);
+        }
+      }
 
       res.status(201).json(answer);
     } catch (error) {

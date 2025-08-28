@@ -8,6 +8,20 @@
       "when": 1755443070760,
       "tag": "0000_exotic_calypso",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1756373729686,
+      "tag": "0001_mushy_bastion",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1756373816073,
+      "tag": "0002_chunky_joshua_kane",
+      "breakpoints": true
     }
   ]
 }

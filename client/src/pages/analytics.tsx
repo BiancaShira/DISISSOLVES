@@ -1,25 +1,31 @@
 import { useQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 import { Sidebar } from "@/components/sidebar";
 import { useAuth } from "@/hooks/use-auth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { BarChart3, TrendingUp, Users, MessageCircle, Eye, Clock } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { BarChart3, TrendingUp, Users, MessageCircle, Eye, Clock, RefreshCw } from "lucide-react";
 
 export default function Analytics() {
   const { user } = useAuth();
+  const [lastUpdated, setLastUpdated] = useState(new Date());
+  const [autoRefresh, setAutoRefresh] = useState(true);
 
-  // Fetch comprehensive stats
-  const { data: stats, isLoading } = useQuery({
+  // Fetch comprehensive stats with auto-refresh
+  const { data: stats, isLoading, refetch: refetchStats } = useQuery({
     queryKey: ["/api/analytics"],
     queryFn: async () => {
       const response = await fetch("/api/analytics");
       if (!response.ok) throw new Error("Failed to fetch analytics");
+      setLastUpdated(new Date());
       return response.json();
     },
     enabled: user?.role === "admin",
+    refetchInterval: autoRefresh ? 30000 : false, // Refresh every 30 seconds
   });
 
-  const { data: trendingQuestions = [] } = useQuery({
+  const { data: trendingQuestions = [], refetch: refetchTrending } = useQuery({
     queryKey: ["/api/questions", { sortBy: "trending", limit: 5 }],
     queryFn: async () => {
       const response = await fetch("/api/questions?sortBy=trending&limit=5");
@@ -27,7 +33,26 @@ export default function Analytics() {
       return response.json();
     },
     enabled: user?.role === "admin",
+    refetchInterval: autoRefresh ? 30000 : false, // Refresh every 30 seconds
   });
+
+  // Fetch stats to show issues by user role
+  const { data: dashboardStats } = useQuery({
+    queryKey: ["/api/stats"],
+    queryFn: async () => {
+      const response = await fetch("/api/stats");
+      if (!response.ok) throw new Error("Failed to fetch stats");
+      return response.json();
+    },
+    enabled: user?.role === "admin",
+    refetchInterval: autoRefresh ? 30000 : false, // Refresh every 30 seconds
+  });
+
+  const handleManualRefresh = () => {
+    refetchStats();
+    refetchTrending();
+    setLastUpdated(new Date());
+  };
 
   // Redirect if not admin
   if (user?.role !== "admin") {
@@ -52,8 +77,35 @@ export default function Analytics() {
       <main className="ml-64 min-h-screen p-8">
         <div className="max-w-7xl mx-auto">
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-foreground mb-2">Analytics Dashboard</h1>
-            <p className="text-muted-foreground">System activity and performance metrics</p>
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-3xl font-bold text-foreground mb-2">Analytics Dashboard</h1>
+                <p className="text-muted-foreground">System activity and performance metrics</p>
+              </div>
+              <div className="flex items-center space-x-4">
+                <div className="text-sm text-muted-foreground">
+                  Last updated: {lastUpdated.toLocaleTimeString()}
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleManualRefresh}
+                  disabled={isLoading}
+                  data-testid="button-refresh"
+                >
+                  <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+                  Refresh
+                </Button>
+                <Button
+                  variant={autoRefresh ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setAutoRefresh(!autoRefresh)}
+                  data-testid="button-auto-refresh"
+                >
+                  {autoRefresh ? "Auto-refresh ON" : "Auto-refresh OFF"}
+                </Button>
+              </div>
+            </div>
           </div>
 
           {isLoading ? (
@@ -202,6 +254,67 @@ export default function Analytics() {
                   </div>
                 </CardContent>
               </Card>
+
+              {/* Issues by User Role */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
+                <Card data-testid="card-issues-by-role">
+                  <CardHeader>
+                    <CardTitle className="flex items-center space-x-2">
+                      <Users className="h-5 w-5" />
+                      <span>Issues by User Role</span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2">
+                          <Badge className="bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-300">
+                            Users
+                          </Badge>
+                        </div>
+                        <span className="font-semibold">{stats?.questionsByRole?.user || 0}</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2">
+                          <Badge className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-300">
+                            Supervisors
+                          </Badge>
+                        </div>
+                        <span className="font-semibold">{stats?.questionsByRole?.supervisor || 0}</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2">
+                          <Badge className="bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300">
+                            Admins
+                          </Badge>
+                        </div>
+                        <span className="font-semibold">{stats?.questionsByRole?.admin || 0}</span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card data-testid="card-response-times">
+                  <CardHeader>
+                    <CardTitle className="flex items-center space-x-2">
+                      <Clock className="h-5 w-5" />
+                      <span>Average Response Times</span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-blue-600">{stats?.avgResponseTime || 0}h</div>
+                        <p className="text-sm text-muted-foreground">Time to First Answer</p>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-green-600">{stats?.avgResolutionTime || 0}h</div>
+                        <p className="text-sm text-muted-foreground">Time to Resolution</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
             </>
           )}
         </div>
