@@ -33,14 +33,14 @@ export default function AuthPage() {
               </div>
             </div>
             <h1 className="text-3xl font-bold text-dark-green dark:text-lime-green">DisiSolves</h1>
-            <p className="text-gray-600 dark:text-gray-400 mt-2">Internal Troubleshooting Platform</p>
+            <p className="text-gray-600 dark:text-gray-400 mt-2">Solve all IT issues</p>
           </div>
 
           <Card>
             <CardHeader>
-              <CardTitle>Welcome Back</CardTitle>
+              <CardTitle>Welcome</CardTitle>
               <p className="text-sm text-muted-foreground mt-2">
-                Please use your assigned credentials to access the system
+                Please enter username and password
               </p>
             </CardHeader>
             <CardContent>
@@ -86,8 +86,8 @@ export default function AuthPage() {
         <div className="max-w-lg text-center">
           <h2 className="text-4xl font-bold mb-6">Solve IT Issues Together</h2>
           <p className="text-lg mb-8 text-gray-200">
-            A collaborative platform for solving IBML Scanner, SoftTrac, and OmniScan issues.
-            Share knowledge, get answers, and help your team stay productive.
+           For solving IBML Scanner, SoftTrac, and OmniScan issues.
+            {/* Share knowledge, get answers, and help your team stay productive. */}
           </p>
           
           <div className="grid grid-cols-1 gap-6">
@@ -107,7 +107,7 @@ export default function AuthPage() {
               </div>
               <div className="text-left">
                 <h3 className="font-semibold text-lime-green">Approval Workflow</h3>
-                <p className="text-sm text-gray-300">Quality control with admin approval for supervisor content</p>
+                <p className="text-sm text-gray-300">Users submit questions that has to be approved by admin and supervisors can answer questions  with admin approval</p>
               </div>
             </div>
             
@@ -117,7 +117,7 @@ export default function AuthPage() {
               </div>
               <div className="text-left">
                 <h3 className="font-semibold text-lime-green">Trending Issues</h3>
-                <p className="text-sm text-gray-300">Stay updated with the most relevant problems and solutions</p>
+                <p className="text-sm text-gray-300">Stay updated with the most relevant problems and solutions at DISI</p>
               </div>
             </div>
           </div>

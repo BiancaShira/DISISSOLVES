@@ -32,7 +32,7 @@ export async function initializePredefinedUsers() {
   try {
     const predefinedUsers = [
       // Admins (Password: P@ssw0rd)
-      { username: "admin", password: "P@ssw0rd", role: "admin", firstName: "Admin", lastName: "User", supervisorType: null },
+      { username: "admin", password: "P@ssw0rd", role: "admin", firstName: "Admin", lastName: "1", supervisorType: null },
       { username: "superadmin", password: "P@ssw0rd", role: "admin", firstName: "Super", lastName: "Admin", supervisorType: null },
       
       // QC Supervisors (Password: disi@2025)
