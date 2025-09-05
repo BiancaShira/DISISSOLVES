@@ -29,7 +29,7 @@ export default function AuthPage() {
           <div className="text-center mb-8">
             <div className="flex items-center justify-center mb-4">
               <img 
-                src="/DISI-logo.png" 
+                src="/assets/DISI-logo.png" 
                 alt="DISI Logo" 
                 className="h-16 w-auto object-contain"
               />
@@ -87,7 +87,7 @@ export default function AuthPage() {
       <div 
         className="flex-1 text-white p-8 flex items-center justify-center relative"
         style={{
-          backgroundImage: 'url(/imagetrac-6400.png)',
+          backgroundImage: 'url(/assets/imagetrac-6400.png)',
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat'

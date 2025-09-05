@@ -388,7 +388,7 @@ export class DatabaseStorage implements IStorage {
     const [activeUsersResult] = await db
       .select({ count: count() })
       .from(users)
-      .where(sql`${users.createdAt} > NOW() - INTERVAL '30 days'`);
+      .where(sql`${users.createdAt} > DATE_SUB(NOW(), INTERVAL 30 DAY)`);
 
     const [answeredQuestionsResult] = await db
       .select({ count: count() })
@@ -439,12 +439,12 @@ export class DatabaseStorage implements IStorage {
     const [questionsThisWeekResult] = await db
       .select({ count: count() })
       .from(questions)
-      .where(sql`${questions.createdAt} > NOW() - INTERVAL '7 days'`);
+      .where(sql`${questions.createdAt} > DATE_SUB(NOW(), INTERVAL 7 DAY)`);
 
     const [answersThisWeekResult] = await db
       .select({ count: count() })
       .from(answers)
-      .where(sql`${answers.createdAt} > NOW() - INTERVAL '7 days'`);
+      .where(sql`${answers.createdAt} > DATE_SUB(NOW(), INTERVAL 7 DAY)`);
 
     const [pendingQuestionsResult] = await db
       .select({ count: count() })
@@ -463,7 +463,7 @@ export class DatabaseStorage implements IStorage {
     const [activeUsersResult] = await db
       .select({ count: count() })
       .from(users)
-      .where(sql`${users.createdAt} > NOW() - INTERVAL '30 days'`);
+      .where(sql`${users.createdAt} > DATE_SUB(NOW(), INTERVAL 30 DAY)`);
 
     const questionsByCategory = await db
       .select({

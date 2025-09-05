@@ -372,7 +372,7 @@ export function AdminPostModal({ open, onOpenChange }: AdminPostModalProps) {
               type="submit" 
               disabled={createQuestionWithAnswerMutation.isPending}
               data-testid="button-submit"
-              className="bg-dark-green hover:bg-dark-green/90 font-bold text-lg py-6 px-8 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
+              className="bg-lime-green text-dark-green hover:bg-lime-green/90 font-bold text-lg py-6 px-8 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
             >
               {createQuestionWithAnswerMutation.isPending ? (
                 "POSTING..."
