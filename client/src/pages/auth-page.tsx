@@ -28,9 +28,11 @@ export default function AuthPage() {
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
             <div className="flex items-center justify-center mb-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-dark-green to-lime-green rounded-lg flex items-center justify-center">
-                <Wrench className="text-white text-xl" />
-              </div>
+              <img 
+                src="/DISI-logo.png" 
+                alt="DISI Logo" 
+                className="h-16 w-auto object-contain"
+              />
             </div>
             <h1 className="text-3xl font-bold text-dark-green dark:text-lime-green">DisiSolves</h1>
             <p className="text-gray-600 dark:text-gray-400 mt-2">Solve all IT issues</p>
@@ -82,8 +84,17 @@ export default function AuthPage() {
       </div>
 
       {/* Right side - Hero section */}
-      <div className="flex-1 bg-gradient-to-br from-dark-green to-dark-green/90 text-white p-8 flex items-center justify-center">
-        <div className="max-w-lg text-center">
+      <div 
+        className="flex-1 text-white p-8 flex items-center justify-center relative"
+        style={{
+          backgroundImage: 'url(/imagetrac-6400.png)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat'
+        }}
+      >
+        <div className="absolute inset-0 bg-gradient-to-br from-dark-green/80 to-dark-green/70"></div>
+        <div className="max-w-lg text-center relative z-10">
           <h2 className="text-4xl font-bold mb-6">Solve IT Issues Together</h2>
           <p className="text-lg mb-8 text-gray-200">
            For solving IBML Scanner, SoftTrac, and OmniScan issues.

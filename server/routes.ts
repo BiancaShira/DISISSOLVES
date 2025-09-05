@@ -1,5 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
+import multer from "multer";
+import path from "path";
 import { setupAuth } from "./auth";
 import { storage } from "./storage";
 import { insertQuestionSchema, insertAnswerSchema } from "@shared/schema";
@@ -21,9 +23,49 @@ function requireRole(roles: string[]) {
   };
 }
 
+// Configure multer for file uploads
+const storage_config = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'public/uploads/')
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9)
+    cb(null, uniqueSuffix + path.extname(file.originalname))
+  }
+});
+
+const upload = multer({ 
+  storage: storage_config,
+  limits: {
+    fileSize: 5 * 1024 * 1024 // 5MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Invalid file type. Only JPEG, PNG, GIF, and WebP are allowed.'));
+    }
+  }
+});
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // sets up /api/register, /api/login, /api/logout, /api/user
   setupAuth(app);
+
+  // File upload endpoint
+  app.post("/api/upload", requireAuth, upload.single('image'), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: "No file uploaded" });
+      }
+      
+      const filename = req.file.filename;
+      res.json({ filename, url: `/uploads/${filename}` });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to upload file" });
+    }
+  });
 
   // Questions routes
   app.get("/api/questions", requireAuth, async (req, res) => {
@@ -120,7 +162,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/questions/:id/status", requireAuth, requireRole(["admin"]), async (req, res) => {
+  app.patch("/api/questions/:id/status", requireAuth, requireRole(["admin", "supervisor"]), async (req, res) => {
     try {
       const { status } = req.body;
       if (!["pending", "approved", "rejected"].includes(status)) {

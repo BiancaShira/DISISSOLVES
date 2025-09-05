@@ -154,6 +154,17 @@ export function QuestionCard({ question }: QuestionCardProps) {
               {question.description}
             </p>
             
+            {question.attachment && (
+              <div className="mb-4">
+                <img 
+                  src={`/uploads/${question.attachment}`} 
+                  alt="Question attachment" 
+                  className="max-w-full h-auto rounded-lg border"
+                  style={{ maxHeight: '200px' }}
+                />
+              </div>
+            )}
+            
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4 text-sm text-muted-foreground">
                 <div className="flex items-center space-x-1">

@@ -43,10 +43,54 @@ export function AdminPostModal({ open, onOpenChange }: AdminPostModalProps) {
 
   const createQuestionWithAnswerMutation = useMutation({
     mutationFn: async () => {
+      let questionAttachment = "";
+      let answerAttachment = "";
+      
+      // Upload question image if present
+      if (questionFile) {
+        try {
+          const formData = new FormData();
+          formData.append('image', questionFile);
+          
+          const response = await fetch('/api/upload', {
+            method: 'POST',
+            body: formData,
+          });
+          
+          if (response.ok) {
+            const result = await response.json();
+            questionAttachment = result.filename;
+          }
+        } catch (error) {
+          console.error('Failed to upload question image:', error);
+        }
+      }
+      
+      // Upload answer image if present
+      if (answerFile) {
+        try {
+          const formData = new FormData();
+          formData.append('image', answerFile);
+          
+          const response = await fetch('/api/upload', {
+            method: 'POST',
+            body: formData,
+          });
+          
+          if (response.ok) {
+            const result = await response.json();
+            answerAttachment = result.filename;
+          }
+        } catch (error) {
+          console.error('Failed to upload answer image:', error);
+        }
+      }
+      
       // First create the question with admin privileges (approved + final)
       const questionResponse = await apiRequest("POST", "/api/questions", {
         ...questionData,
         isFinal: 1, // Admin questions are final
+        attachment: questionAttachment || undefined,
       });
       const question = await questionResponse.json();
       
@@ -54,6 +98,7 @@ export function AdminPostModal({ open, onOpenChange }: AdminPostModalProps) {
       await apiRequest("POST", "/api/answers", {
         questionId: question.id,
         answerText: answerData.answerText,
+        attachment: answerAttachment || undefined,
       });
       
       return question;

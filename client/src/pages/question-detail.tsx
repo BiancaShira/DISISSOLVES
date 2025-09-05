@@ -236,6 +236,17 @@ export default function QuestionDetail() {
             <CardContent>
               <div className="prose dark:prose-invert mb-6">
                 <p className="text-foreground whitespace-pre-wrap">{question.description}</p>
+                
+                {question.attachment && (
+                  <div className="mt-4">
+                    <img 
+                      src={`/uploads/${question.attachment}`} 
+                      alt="Question attachment" 
+                      className="max-w-full h-auto rounded-lg border"
+                      style={{ maxHeight: '400px' }}
+                    />
+                  </div>
+                )}
               </div>
               
               <div className="flex items-center justify-between pt-4 border-t border-border">
@@ -321,6 +332,17 @@ export default function QuestionDetail() {
                       
                       <div className="prose dark:prose-invert mb-4">
                         <p className="text-foreground whitespace-pre-wrap">{answer.answerText}</p>
+                        
+                        {answer.attachment && (
+                          <div className="mt-4">
+                            <img 
+                              src={`/uploads/${answer.attachment}`} 
+                              alt="Answer attachment" 
+                              className="max-w-full h-auto rounded-lg border"
+                              style={{ maxHeight: '300px' }}
+                            />
+                          </div>
+                        )}
                       </div>
                       
                       <div className="flex items-center space-x-4 text-sm text-muted-foreground">

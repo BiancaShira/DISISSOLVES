@@ -108,8 +108,27 @@ export function RaiseIssueModal({ open, onOpenChange }: RaiseIssueModalProps) {
 
     let attachment = "";
     if (selectedFile) {
-      // For now, we'll just store the filename. In a real app, you'd upload to a storage service
-      attachment = selectedFile.name;
+      try {
+        const uploadData = new FormData();
+        uploadData.append('image', selectedFile);
+        
+        const response = await fetch('/api/upload', {
+          method: 'POST',
+          body: uploadData,
+        });
+        
+        if (response.ok) {
+          const result = await response.json();
+          attachment = result.filename;
+        }
+      } catch (error) {
+        console.error('Failed to upload image:', error);
+        toast({
+          title: "Upload failed",
+          description: "Failed to upload image. The question will be submitted without the image.",
+          variant: "destructive",
+        });
+      }
     }
 
     createQuestionMutation.mutate({
